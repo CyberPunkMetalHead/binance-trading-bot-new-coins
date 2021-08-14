@@ -1,0 +1,15 @@
+---
+  TRADE_OPTIONS:
+    # In your pairing coin
+    QUANTITY: 15
+    # BTCUSDT will be bought for example
+    PAIRING: USDT
+    # How often to check for posts and run the script
+    # in minutes
+    RUN_EVERY: 0.3
+    TEST: True
+    SL: 3
+    TP: 9
+    ENABLE_TSL: False
+    TSL: 0.5
+    TTP: 1
