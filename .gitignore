@@ -1,0 +1,9 @@
+# Ignore creds file
+auth/auth.yml
+
+# Ignore orders
+order.json
+sold.json
+
+# Ignore pycache
+__pycache__/

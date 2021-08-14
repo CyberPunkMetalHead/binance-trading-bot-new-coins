@@ -1,0 +1,4 @@
+---
+  # CLIENT DETAILS
+  binance_api: "BINANCE_API_KEY"
+  binance_secret: "BINANCE_SECRET"
