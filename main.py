@@ -145,17 +145,18 @@ def main():
             for coin in new_coins:
 
                 # buy if the coin hasn't already been bought
-                if coin['symbol'] not in order:
+                if coin['symbol'] not in order and pairing in coin:
+                    symbol_only = coin['symbol'].split(pairing)[0]
                     print(f"Preparing to buy {coin['symbol']}")
 
-                    price = get_price(coin['symbol'], pairing)
+                    price = get_price(symbol_only, pairing)
                     volume = convert_volume(coin['symbol']+pairing, qty, price)
 
                     try:
                         # Run a test trade if true
                         if config['TRADE_OPTIONS']['TEST']:
                             order[coin['symbol']] = {
-                                        'symbol':coin['symbol']+config['TRADE_OPTIONS']['PAIRING'],
+                                        'symbol':symbol_only+pairing,
                                         'price':price,
                                         'volume':volume,
                                         'time':datetime.timestamp(datetime.now()),
@@ -167,7 +168,7 @@ def main():
 
                         # place a live order if False
                         else:
-                            order[coin['symbol']] = create_order(coin['symbol']+config['TRADE_OPTIONS']['PAIRING'], volume, 'BUY')
+                            order[coin['symbol']] = create_order(symbol_only+pairing, volume, 'BUY')
                             order[coin['symbol']]['tp'] = tp
                             order[coin['symbol']]['sl'] = sl
 
@@ -182,10 +183,12 @@ def main():
                     print(f"New coin['symbol'] detected, but {coin['symbol']} is currently in portfolio")
 
         else:
-            print(f"No new coins detected, checking again in {frequency} minute(s)..")
+            pass
+            #print(f"No new coins detected, checking again in {frequency} minute(s)..")
 
-        time.sleep(60*config['TRADE_OPTIONS']['RUN_EVERY'])
+        time.sleep(60*frequency)
 
 
 if __name__ == '__main__':
+    print('working...')
     main()
