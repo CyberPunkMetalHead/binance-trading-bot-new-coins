@@ -37,13 +37,13 @@ def convert_volume(coin, quantity, last_price):
         return volume
 
 
-def create_order(coin, quantity, type):
+def create_order(coin, amount, action):
     """
     Creates simple buy order and returns the order
     """
     return client.create_order(
         symbol = coin,
-        side = type,
+        side = action,
         type = 'MARKET',
-        quantity = quantity
+        quantity = amount
     )
