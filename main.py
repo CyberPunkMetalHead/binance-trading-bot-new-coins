@@ -145,7 +145,7 @@ def main():
             for coin in new_coins:
 
                 # buy if the coin hasn't already been bought
-                if coin['symbol'] not in order and pairing in coin:
+                if coin['symbol'] not in order and pairing in coin['symbol']:
                     symbol_only = coin['symbol'].split(pairing)[0]
                     print(f"Preparing to buy {coin['symbol']}")
 
