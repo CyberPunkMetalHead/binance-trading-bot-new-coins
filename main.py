@@ -180,7 +180,7 @@ def main():
 
                         store_order('order.json', order)
                 else:
-                    print(f"New coin['symbol'] detected, but {coin['symbol']} is currently in portfolio")
+                    print(f"New coin detected, but {coin['symbol']} is currently in portfolio, or pairing is not {pairing}")
 
         else:
             pass
