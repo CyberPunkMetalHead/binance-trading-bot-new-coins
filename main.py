@@ -25,7 +25,8 @@ def get_new_coins(all_coins):
     Returns new coins and the new coin list
     """
     all_coins_recheck = get_all_coins()
-    return [new_coins for new_coins in all_coins_recheck if new_coins['symbol'] not in [coin['symbol'] for coin in all_coins]], all_coins_recheck
+    new_coin_symbols = {coin['symbol'] for coin in all_coins}
+    return [new_coins for new_coins in all_coins_recheck if new_coins['symbol'] not in new_coin_symbols], all_coins_recheck
 
 
 def get_price(coin, pairing):
@@ -60,13 +61,13 @@ def main():
         if os.path.isfile('order.json'):
             order = load_order('order.json')
 
-            for coin in list(order):
+            for coin, order_info in order.items():
 
                 # store some necesarry trade info for a sell
-                stored_price = float(order[coin]['price'])
-                coin_tp = order[coin]['tp']
-                coin_sl = order[coin]['sl']
-                volume = order[coin]['volume']
+                stored_price = float(order_info['price'])
+                coin_tp = order_info['tp']
+                coin_sl = order_info['sl']
+                volume = order_info['volume']
 
                 last_price = get_price(coin, pairing)
 
@@ -75,7 +76,7 @@ def main():
                     # increase as absolute value for TP
                     new_tp = float(last_price) + (float(last_price)*ttp /100)
                     # convert back into % difference from when the coin was bought
-                    new_tp = float( (new_tp - stored_price) / stored_price*100)
+                    new_tp = float((new_tp - stored_price) / stored_price*100)
 
                     # same deal as above, only applied to trailing SL
                     new_sl = float(last_price) - (float(last_price)*tsl /100)
@@ -92,11 +93,9 @@ def main():
                 elif float(last_price) < stored_price - (stored_price*sl /100) or float(last_price) > stored_price + (stored_price*tp /100) and not enable_tsl:
 
                     try:
-
                         # sell for real if test mode is set to false
                         if not test_mode:
                             sell = create_order(coin+pairing, coin['volume'], 'SELL')
-
 
                         print(f"sold {coin} at {(float(last_price) - stored_price) / float(stored_price)*100}")
 
@@ -107,13 +106,8 @@ def main():
                     except Exception as e:
                         print(e)
 
-                    # store sold trades data
-                    else:
-                        if os.path.isfile('sold.json'):
-                            sold_coins = load_order('sold.json')
-
-                        else:
-                            sold_coins = {}
+                    else:  # store sold trades data
+                        sold_coins = load_order('sold.json') if os.path.isfile('sold.json') else {}
 
                         if not test_mode:
                             sold_coins[coin] = sell
