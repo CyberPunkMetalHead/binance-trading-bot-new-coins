@@ -8,5 +8,6 @@ It comes with a live and test mode so naturally, use at your own risk.
 for a step-by-step guide on how to set it up and configure please see the guide here: [Binance new coin trading bot guide](https://www.cryptomaton.org/2021/08/15/coding-a-binance-trading-bot-that-detects-new-coins-the-moment-they-are-listed/)
 
 The new coins crypto trading bot explained in more detail:
+
 [![binance new coin listings bot](https://img.youtube.com/vi/mIa9eQDhubs/0.jpg)](https://www.youtube.com/watch?v=mIa9eQDhubs)
 
