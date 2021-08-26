@@ -6,10 +6,10 @@
     PAIRING: USDT
     # How often to check for posts and run the script
     # in minutes
-    RUN_EVERY: 0.1
+    RUN_EVERY: 0.025
     TEST: True
     SL: 3
-    TP: 9
-    ENABLE_TSL: False
-    TSL: 0.5
-    TTP: 1
+    TP: 3
+    ENABLE_TSL: True
+    TSL: 2
+    TTP: 2
