@@ -98,7 +98,7 @@ def main():
 
                             # sell for real if test mode is set to false
                             if not test_mode:
-                                sell = create_order(coin+pairing, coin['volume'], 'SELL')
+                                sell = create_order(coin, coin['volume'], 'SELL')
 
 
                             print(f"sold {coin} at {(float(last_price) - stored_price) / float(stored_price)*100}")
@@ -123,7 +123,7 @@ def main():
                                 store_order('sold.json', sold_coins)
                             else:
                                 sold_coins[coin] = {
-                                            'symbol':coin+pairing,
+                                            'symbol':coin,
                                             'price':last_price,
                                             'volume':volume,
                                             'time':datetime.timestamp(datetime.now()),
