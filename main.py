@@ -63,7 +63,7 @@ def main():
 
                 for coin in list(order):
 
-                    # store some necesarry trade info for a sell
+                    # store some necessary trade info for a sell
                     stored_price = float(order[coin]['price'])
                     coin_tp = order[coin]['tp']
                     coin_sl = order[coin]['sl']
