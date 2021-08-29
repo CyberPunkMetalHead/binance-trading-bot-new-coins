@@ -3,10 +3,9 @@ from util.store_order import load_order, store_order
 from util.load_config import load_config
 import logging
 import os.path
-from typing import List, Dict, Tuple
+from typing import List, Dict
 import time
 from util.constants import ROOT_DIR
-from collections import defaultdict
 
 # loads local configuration
 config = load_config(os.path.join(ROOT_DIR, 'config.yml'))
@@ -32,23 +31,24 @@ def generate_coin_seen_dict(all_coins: List) -> Dict:
     The value for every coin detected before the loop is set to True in the coin_seen_dict.
     All the new coins detected during the loop will have a value of False.
     """
-    coin_seen_dict = defaultdict(bool)
+    coin_seen_dict = {}
     for old_coin in all_coins:
         coin_seen_dict[old_coin['symbol']] = True
     return coin_seen_dict
 
 
-def get_new_coins(coin_seen_dict) -> Dict:
+def get_new_coins(coin_seen_dict: Dict) -> List:
     """
     This method checks if there are new coins listed and returns them in a list.
     The value of the new coins in coin_seen_dict will be set to True to make them not get detected again.
     """
     result = []
-    all_coins_recheck = get_all_coins()
     logger.debug("Getting all coins...")
+    all_coins_recheck = get_all_coins()
+
     for new_coin in all_coins_recheck:
-        if not coin_seen_dict[new_coin['symbol']]:
-            result += [new_coin]
+        if new_coin['symbol'] not in coin_seen_dict:
+            result.append(new_coin)
             # this line ensures the new coin isn't detected again
             coin_seen_dict[new_coin['symbol']] = True
 
@@ -220,9 +220,6 @@ def main():
 
             interval += 1
 
-        except KeyboardInterrupt as e:
-            logger.info("Exiting program...")
-
         except Exception as e:
             logger.error(e)
 
@@ -232,4 +229,7 @@ def main():
 
 if __name__ == '__main__':
     logger.info('Starting...')
-    main()
+    try:
+        main()
+    except KeyboardInterrupt as e:
+        logger.info("Exiting program...")
