@@ -5,6 +5,7 @@ from load_config import *
 from collections import defaultdict
 from datetime import datetime, time
 import time
+import threading
 
 import json
 import os.path
@@ -33,13 +34,12 @@ def generate_coin_seen_dict(all_coins):
     return coin_seen_dict
 
 
-def get_new_coins(coin_seen_dict):
+def get_new_coins(coin_seen_dict, all_coins_recheck):
     """
     This method checks if there are new coins listed and returns them in a list.
     The value of the new coins in coin_seen_dict will be set to True to make them not get detected again.
     """
     result = []
-    all_coins_recheck = get_all_coins()
 
     for new_coin in all_coins_recheck:
         if not coin_seen_dict[new_coin['symbol']]:
@@ -55,6 +55,39 @@ def get_price(coin, pairing):
     Get the latest price for a coin
     """
     return client.get_ticker(symbol=coin+pairing)['lastPrice']
+
+
+def add_updated_all_coins_to_queue(queue):
+    """
+    This method makes a request to get all coins and adds it to the given queue.
+    """
+    all_coins_updated = get_all_coins()
+    queue += [all_coins_updated]
+
+
+def make_threads_to_request_all_coins(queue, interval=0.05, max_amount_of_threads=20, max_queue_length=20):
+    """
+    This method creates threads for new requests to get all coins.
+    A new thread is created every interval.
+    If there are more threads than max_amount_of_threads no new threads will be created, after every 1 second there
+    will be a new attempt to create a thread.
+    The amount of threads can increase if the response from Binance to get all coins increases.
+    If the queue length gets bigger than max_queue_length no new threads will be created, after every 1 second there
+    will be a new attempt to create a thread.
+    The amount of elements in the queue can increase if the while loop in main takes long to handle.
+    """
+    while True:
+        time.sleep(interval)
+        # checks if the amount of threads is bigger than max_amount_of_threads
+        if len(threading.enumerate()) > max_amount_of_threads:
+            print("Too many threads, waiting 1 second to attempt to create a new thread.")
+            time.sleep(1)
+        # checks if the queue isn't getting too big
+        elif len(queue) > max_queue_length:
+            print("Queue length too big, waiting 1 second to attempt to create a new thread.")
+            time.sleep(1)
+        else:
+            threading.Thread(target=add_updated_all_coins_to_queue, args=(queue,)).start()
 
 
 def main():
@@ -76,6 +109,12 @@ def main():
     all_coins = get_all_coins()
     coin_seen_dict = generate_coin_seen_dict(all_coins)
 
+    # this list will work as a queue, if a new updated all_coins is received it will be added to this queue
+    queue_of_updated_all_coins = []
+    # start a thread to run the make_threads_to_request_all_coins method
+    threading.Thread(target=make_threads_to_request_all_coins, args=(queue_of_updated_all_coins,)).start()
+    # this is just used to calculate the amount of time between getting updated all_coins
+    t0 = time.time()
     while True:
         try:
 
@@ -159,8 +198,20 @@ def main():
             else:
                 order = {}
 
-            # check if new coins are listed
-            new_coins = get_new_coins(coin_seen_dict)
+            # check if a new all_coins_updated is on the queue
+            if len(queue_of_updated_all_coins) > 0:
+                # get the first updated coins from the queue
+                all_coins_updated = queue_of_updated_all_coins.pop(0)
+                # check if new coins are listed
+                new_coins = get_new_coins(coin_seen_dict, all_coins_updated)
+
+                print("time to get updated list of coins: ", time.time() - t0)
+                print("current amount of threads: ", len(threading.enumerate()))
+                print("current queue length: ", len(queue_of_updated_all_coins))
+                t0 = time.time()
+            else:
+                # if no new all_coins_updated is on the queue, new_coins should be empty
+                new_coins = []
 
             # the buy block and logic pass
             if len(new_coins) > 0:
