@@ -1,6 +1,7 @@
 from trade_client import *
 from store_order import *
 from load_config import *
+from utils.exit_gracefully import *
 
 from collections import defaultdict
 from datetime import datetime, time
@@ -215,5 +216,6 @@ def main():
 
 
 if __name__ == '__main__':
-    print('working...')
+    register_handlers()
+    print('Working... Press CTRL-C to exit.')
     main()
