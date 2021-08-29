@@ -69,7 +69,7 @@ def main():
     while True:
         try:
             # log an update about every LOG_INFO_UPDATE_INTERVAL minutes
-            if interval % (info_update_interval * 60) / frequency == 0:
+            if interval % ((info_update_interval * 60) / frequency) == 0:
                 logger.info("ORDERS UPDATE:\n\t{}".format(order))
 
             # check if the order file exists and load the current orders

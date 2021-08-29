@@ -5,7 +5,7 @@ TRADE_OPTIONS:
   # BTCUSDT will be bought for example
   PAIRING: USDT
   # How often to check for posts and run the script in seconds
-  RUN_EVERY: 15
+  RUN_EVERY: 10
   TEST: True
   SL: 3
   TP: 3
@@ -13,5 +13,5 @@ TRADE_OPTIONS:
   TSL: 2
   TTP: 2
 PROGRAM_OPTIONS:
-  LOG_LEVEL: DEBUG
+  LOG_LEVEL: INFO
   LOG_INFO_UPDATE_INTERVAL: 2
