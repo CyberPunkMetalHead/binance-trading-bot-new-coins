@@ -1,15 +1,17 @@
-from auth.binance_auth import *
+from auth.binance_auth import load_binance_creds
 import logging
 from typing import Dict
 from util.types import ActionType
 from datetime import datetime
+import os
+from util.constants import ROOT_DIR
 
-client = load_binance_creds('auth/auth.yml')
+client = load_binance_creds(os.path.join(ROOT_DIR, 'auth/auth.yml'))
 logger = logging.getLogger(__name__)
 
 
-def get_price(coin: str) -> float:
-    return client.get_ticker(symbol=coin)['lastPrice']
+def get_price_by_symbol(coin: str) -> float:
+    return float(client.get_ticker(symbol=coin)['lastPrice'])
 
 
 def convert_volume(coin: str, quantity: float, last_price: float):
@@ -51,7 +53,7 @@ def create_order(coin: str, amount: float, action: ActionType, test_mode=False) 
     Creates simple buy order and returns the order
     """
     if test_mode:
-        price = get_price(coin)
+        price = get_price_by_symbol(coin)
         return {'symbol': coin, 'orderId': 999, 'clientOrderId': 'N/A', 'transactTime': datetime.now().timestamp(),
                 'price': price, 'origQty': amount, 'status': 'TEST_MODE', 'timeInForce': 'GTC', 'type': "MARKET",
                 'side': action}

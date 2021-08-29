@@ -1,15 +1,14 @@
-from trade_client import *
-from util.store_order import *
-from util.load_config import *
-
-from datetime import datetime
+from trade_client import client, create_order, convert_volume
+from util.store_order import load_order, store_order
+from util.load_config import load_config
 import logging
 import os.path
 from typing import List, Dict, Tuple
 import time
+from util.constants import ROOT_DIR
 
 # loads local configuration
-config = load_config('config.yml')
+config = load_config(os.path.join(ROOT_DIR, 'config.yml'))
 
 # setup logging
 logging.basicConfig(
@@ -26,7 +25,7 @@ def get_all_coins() -> List[Dict[str, str]]:
     return client.get_all_tickers()
 
 
-def get_new_coins(all_coins) -> Tuple[List, List[Dict[str, str]]]:
+def get_new_coins(all_coins: List[Dict[str, str]]) -> Tuple[List, List[Dict[str, str]]]:
     """
     Returns new coins and the new coin list
     """
@@ -36,12 +35,12 @@ def get_new_coins(all_coins) -> Tuple[List, List[Dict[str, str]]]:
             new_coins['symbol'] not in [coin['symbol'] for coin in all_coins]], all_coins_recheck
 
 
-def get_price(coin, pairing) -> float:
+def get_price(coin: str, pairing: str) -> float:
     """
     Get the latest price for a coin
     """
     logger.debug("Getting latest price for [{}]".format(coin))
-    return client.get_ticker(symbol=coin + pairing)['lastPrice']
+    return float(client.get_ticker(symbol=coin + pairing)['lastPrice'])
 
 
 def main():
@@ -173,23 +172,16 @@ def main():
 
                         try:
                             # Run a test trade if true
-                            if config['TRADE_OPTIONS']['TEST']:
-                                order[coin['symbol']] = {
-                                    'symbol': symbol_only + pairing,
-                                    'price': price,
-                                    'volume': volume,
-                                    'time': datetime.timestamp(datetime.now()),
-                                    'tp': tp,
-                                    'sl': sl
-                                }
-
+                            if test_mode:
+                                order[coin['symbol']] = create_order(symbol_only + pairing, volume, 'BUY', test_mode=True)
                                 logger.info('PLACING TEST ORDER')
 
                             # place a live order if False
                             else:
                                 order[coin['symbol']] = create_order(symbol_only + pairing, volume, 'BUY')
-                                order[coin['symbol']]['tp'] = tp
-                                order[coin['symbol']]['sl'] = sl
+
+                            order[coin['symbol']]['tp'] = tp
+                            order[coin['symbol']]['sl'] = sl
 
                         except Exception as e:
                             logger.error(e)
