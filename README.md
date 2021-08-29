@@ -5,6 +5,23 @@ It comes with trailing stop loss and other features.
 This open source crypto trading bot should able able to quickly detect new coins listings on Binance and quickly ride the price spike. 
 It comes with a live and test mode so naturally, use at your own risk.
 
+# Fast Usage
+
+Install dependencies
+
+```
+pip install -r requirements.txt
+```
+
+Create set your auth keys at auth/auth.yml (there is an auth/auth.example.yml)
+
+Check config.yml and run with `python main.py`
+
+
+# Websocket watcher
+
+You can setup a `config.ini` file following the `config.example.ini` and use the websocket.py script, to watch and get notified with a telegram bot you may have.
+
 
 <p>&nbsp;</p>
 
