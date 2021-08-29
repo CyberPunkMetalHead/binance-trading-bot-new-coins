@@ -1,7 +1,8 @@
 from auth.binance_auth import *
 import logging
 from typing import Dict
-from types import ActionType
+from util.types import ActionType
+from datetime import datetime
 
 client = load_binance_creds('auth/auth.yml')
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ def convert_volume(coin: str, quantity: float, last_price: float):
         if lot_size[coin] < 0:
             lot_size[coin] = 0
 
-    except:
+    except Exception as e:
         logger.error("Ran except block for lot size")
         lot_size = {coin: 0}
         pass
@@ -45,13 +46,19 @@ def convert_volume(coin: str, quantity: float, last_price: float):
     return volume
 
 
-def create_order(coin: str, amount: float, action: ActionType) -> Dict:
+def create_order(coin: str, amount: float, action: ActionType, test_mode=False) -> Dict:
     """
     Creates simple buy order and returns the order
     """
-    return client.create_order(
-        symbol=coin,
-        side=action,
-        type='MARKET',
-        quantity=amount
-    )
+    if test_mode:
+        price = get_price(coin)
+        return {'symbol': coin, 'orderId': 999, 'clientOrderId': 'N/A', 'transactTime': datetime.now().timestamp(),
+                'price': price, 'origQty': amount, 'status': 'TEST_MODE', 'timeInForce': 'GTC', 'type': "MARKET",
+                'side': action}
+    else:
+        return client.create_order(
+            symbol=coin,
+            side=action,
+            type='MARKET',
+            quantity=amount
+        )

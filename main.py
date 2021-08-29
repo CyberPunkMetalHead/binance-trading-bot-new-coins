@@ -1,11 +1,12 @@
 from trade_client import *
-from store_order import *
-from load_config import *
+from util.store_order import *
+from util.load_config import *
 
 from datetime import datetime
 import logging
 import os.path
 from typing import List, Dict, Tuple
+import time
 
 # loads local configuration
 config = load_config('config.yml')
@@ -13,7 +14,7 @@ config = load_config('config.yml')
 # setup logging
 logging.basicConfig(
     format='%(asctime)s %(levelname)s: %(message)s',
-    level=config['PROGRAM_OPTIONS'].get('LOGLEVEL', 'INFO') if 'PROGRAM_OPTIONS' in config else "INFO")
+    level=config['PROGRAM_OPTIONS'].get('LOG_LEVEL', 'INFO') if 'PROGRAM_OPTIONS' in config else "INFO")
 logging.getLogger('urllib3').setLevel('INFO')
 logger = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ def main():
     Sells, adjusts TP and SL according to trailing values
     and buys new coins
     """
-    # store config deets
+    # store config details
     tp = config['TRADE_OPTIONS']['TP']
     sl = config['TRADE_OPTIONS']['SL']
     enable_tsl = config['TRADE_OPTIONS']['ENABLE_TSL']
@@ -59,10 +60,18 @@ def main():
     frequency = config['TRADE_OPTIONS']['RUN_EVERY']
     test_mode = config['TRADE_OPTIONS']['TEST']
 
+    info_update_interval = config['PROGRAM_OPTIONS'].get("LOG_INFO_UPDATE_INTERVAL",
+                                                         2) if 'PROGRAM_OPTIONS' in config else 2
+
     all_coins = get_all_coins()
 
+    interval = 0
+    order = {}
     while True:
         try:
+            # log an update about every LOG_INFO_UPDATE_INTERVAL minutes
+            if interval % (info_update_interval * 60) / frequency == 0:
+                logger.info("ORDERS UPDATE:\n\t{}".format(order))
 
             # check if the order file exists and load the current orders
             # basically the sell block and update TP and SL logic
@@ -103,16 +112,15 @@ def main():
                     elif float(last_price) < stored_price - (stored_price * sl / 100) or float(
                             last_price) > stored_price + (stored_price * tp / 100) and not enable_tsl:
 
-                        sell = None
-
                         try:
 
-                            # sell for real if test mode is set to false
-                            if not test_mode:
+                            if test_mode:
+                                sell = create_order(coin, coin['volume'], 'SELL', test_mode=True)
+                            else:
+                                # sell for real if test mode is set to false
                                 sell = create_order(coin, coin['volume'], 'SELL')
-
-                            logger.info(
-                                f"Sold {coin} at {(float(last_price) - stored_price) / float(stored_price) * 100}")
+                                logger.info(
+                                    f"Sold [{coin}] at {(float(last_price) - stored_price) / float(stored_price) * 100}")
 
                             # remove order from json file
                             order.pop(coin)
@@ -129,20 +137,16 @@ def main():
                             else:
                                 sold_coins = {}
 
-                            if not test_mode:
-                                sold_coins[coin] = sell
-                                store_order('sold.json', sold_coins)
-                            else:
-                                sold_coins[coin] = {
-                                    'symbol': coin,
-                                    'price': last_price,
-                                    'volume': volume,
-                                    'time': datetime.timestamp(datetime.now()),
-                                    'profit': float(last_price) - stored_price,
-                                    'relative_profit': round((float(last_price) - stored_price) / stored_price * 100, 3)
-                                }
+                            sold_coins[coin] = {
+                                'symbol': sell['symbol'],
+                                'price': sell['price'],
+                                'amount': sell['amount'],
+                                'datetime': sell['transactTime'],
+                                'profit': float(last_price) - stored_price,
+                                'relative_profit': round((float(last_price) - stored_price) / stored_price * 100, 3)
+                            }
 
-                                store_order('sold.json', sold_coins)
+                            store_order('sold.json', sold_coins)
 
             else:
                 order = {}
@@ -202,11 +206,16 @@ def main():
             else:
                 logger.debug("No new coins found.")
 
+            interval += 1
+
         except KeyboardInterrupt as e:
-            logger.info("Exiting Program...")
+            logger.info("Exiting program...")
 
         except Exception as e:
             logger.error(e)
+
+        finally:
+            time.sleep(frequency)
 
 
 if __name__ == '__main__':
