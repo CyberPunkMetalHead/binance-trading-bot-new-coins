@@ -6,6 +6,7 @@ import os.path
 from typing import List, Dict, Tuple
 import time
 from util.constants import ROOT_DIR
+from collections import defaultdict
 
 # loads local configuration
 config = load_config(os.path.join(ROOT_DIR, 'config.yml'))
@@ -25,14 +26,33 @@ def get_all_coins() -> List[Dict[str, str]]:
     return client.get_all_tickers()
 
 
-def get_new_coins(all_coins: List[Dict[str, str]]) -> Tuple[List, List[Dict[str, str]]]:
+def generate_coin_seen_dict(all_coins: List) -> Dict:
     """
-    Returns new coins and the new coin list
+    This method should be used once before starting the loop.
+    The value for every coin detected before the loop is set to True in the coin_seen_dict.
+    All the new coins detected during the loop will have a value of False.
     """
-    logger.debug("Getting all coins...")
+    coin_seen_dict = defaultdict(bool)
+    for old_coin in all_coins:
+        coin_seen_dict[old_coin['symbol']] = True
+    return coin_seen_dict
+
+
+def get_new_coins(coin_seen_dict) -> Dict:
+    """
+    This method checks if there are new coins listed and returns them in a list.
+    The value of the new coins in coin_seen_dict will be set to True to make them not get detected again.
+    """
+    result = []
     all_coins_recheck = get_all_coins()
-    return [new_coins for new_coins in all_coins_recheck if
-            new_coins['symbol'] not in [coin['symbol'] for coin in all_coins]], all_coins_recheck
+    logger.debug("Getting all coins...")
+    for new_coin in all_coins_recheck:
+        if not coin_seen_dict[new_coin['symbol']]:
+            result += [new_coin]
+            # this line ensures the new coin isn't detected again
+            coin_seen_dict[new_coin['symbol']] = True
+
+    return result
 
 
 def get_price(coin: str, pairing: str) -> float:
@@ -63,6 +83,7 @@ def main():
                                                          2) if 'PROGRAM_OPTIONS' in config else 2
 
     all_coins = get_all_coins()
+    coin_seen_dict = generate_coin_seen_dict(all_coins)
 
     interval = 0
     order = {}
@@ -150,14 +171,13 @@ def main():
             else:
                 order = {}
 
-            # store new coins and rechecked coins list here
-            new_coins, all_coins_recheck = get_new_coins(all_coins)
+            # check if new coins are listed
+            new_coins = get_new_coins(coin_seen_dict)
 
             # the buy block and logic pass
             if len(new_coins) > 0:
                 logger.debug("New Coins: []".format(new_coins))
 
-                all_coins = all_coins_recheck
                 logger.info(f'New coins detected: {new_coins}')
 
                 for coin in new_coins:
