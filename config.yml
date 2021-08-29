@@ -1,15 +1,17 @@
 ---
-  TRADE_OPTIONS:
-    # In your pairing coin
-    QUANTITY: 15
-    # BTCUSDT will be bought for example
-    PAIRING: USDT
-    # How often to check for posts and run the script
-    # in minutes
-    RUN_EVERY: 0.025
-    TEST: True
-    SL: 3
-    TP: 3
-    ENABLE_TSL: True
-    TSL: 2
-    TTP: 2
+TRADE_OPTIONS:
+  # In your pairing coin
+  QUANTITY: 30
+  # BTCUSDT will be bought for example
+  PAIRING: USDT
+  # How often to check for posts and run the script in seconds
+  RUN_EVERY: 15
+  TEST: True
+  SL: 3
+  TP: 3
+  ENABLE_TSL: True
+  TSL: 2
+  TTP: 2
+PROGRAM_OPTIONS:
+  LOG_LEVEL: DEBUG
+  LOG_INFO_UPDATE_INTERVAL: 2
