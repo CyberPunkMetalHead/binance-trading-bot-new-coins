@@ -1,5 +1,6 @@
----
-  # CLIENT DETAILS
-  binance_api: "BINANCE_API_KEY"
-  binance_secret: "BINANCE_SECRET"
-  binance_tld: "BINANCE_TLD"
+BINANCE:
+  key:  "BINANCE_API_KEY"
+  secret: "BINANCE_SECRET"
+FTX:
+  key: "FTX_SECRET"
+  secret: "FTX_SECRET"
