@@ -194,7 +194,7 @@ class Bot:
         self._pending_remove.append(order.ticker.ticker)
 
         # store sold trades data
-        self.sold[order.ticker.ticker] = Sold(
+        sold = Sold(
             ticker=order.ticker,
             purchase_datetime=order.purchase_datetime,
             price=sell.price,
@@ -210,6 +210,10 @@ class Bot:
             profit_percent=(current_price - stored_price) / stored_price * 100,
             sold_datetime=sell.purchase_datetime,
         )
+
+        self.sold[order.ticker.ticker] = sold
+        if not Config.TEST and Config.SHARE_DATA:
+            Util.post_pipedream(sold)
 
     def process_new_ticker(self, new_ticker: Ticker):
         # buy if the ticker hasn't already been bought
@@ -235,6 +239,8 @@ class Bot:
                     self.config, ticker=new_ticker, size=size, side="BUY"
                 )
                 self.orders[new_ticker.ticker] = order
+                if not Config.TEST and Config.SHARE_DATA:
+                    Util.post_pipedream(order)
 
             except Exception as e:
                 errLogger.error(traceback.format_exc())

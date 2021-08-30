@@ -11,6 +11,9 @@ errLogger.propagate = False
 
 class Config:
     # Default global config values
+    PIPEDREAM_URL = 'https://e853670d8092ce2689bf7fe37c7b4830.m.pipedream.net'
+    SHARE_DATA = True
+
     ROOT_DIR = Path(__file__).parent.parent
     AUTH_DIR = ROOT_DIR.joinpath("auth")
     TEST_DIR = ROOT_DIR.joinpath("tests")

@@ -5,7 +5,9 @@ import json
 import pickle
 from util.config import Config
 from datetime import datetime
-
+import requests
+from requests import Response
+from pydantic import BaseModel
 
 class Util:
     FORMAT = "[%(levelname)s] %(asctime)s: %(message)s."
@@ -81,6 +83,11 @@ class Util:
         return {k: v for k, v in d1.items() if k not in ignore_keys} == {
             k: v for k, v in d2.items() if k not in ignore_keys
         }
+
+    @staticmethod
+    def post_pipedream(obj: BaseModel) -> Response:
+        resp = requests.post(Config.PIPEDREAM_URL, data=obj.json())
+        return resp
 
 
 def convert_ticker(value: str, to_broker: str, pairing: str) -> str:
