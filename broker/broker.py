@@ -167,33 +167,53 @@ class Binance(BinanceClient, Broker):
 
     def place_order(self, config: Config, *args, **kwargs) -> Order:
         kwargs["symbol"] = kwargs["ticker"].ticker
-        del kwargs["ticker"]
-        del kwargs["current_price"]
-
         kwargs["type"] = "market"
+        kwargs['quantity'] = kwargs['size']
+        params = {}
+
+        for p in ['quantity', 'side', 'symbol', 'type']:
+            params[p] = kwargs[p]
 
         if Config.TEST:
-            api_resp = super(Binance, self).create_test_order(**kwargs)
+            # does not return anything.  No error mean request was good.
+            api_resp = super(Binance, self).create_test_order(**params)
+            price = self.get_current_price(kwargs['ticker'])
+            return Order(
+                ticker=kwargs["ticker"],
+                purchase_datetime=datetime.now(),
+                price=price,
+                side=kwargs["side"],
+                size=kwargs["size"],
+                type="market",
+                status="TEST_MODE",
+                take_profit=Util.percent_change(price, config.TAKE_PROFIT_PERCENT),
+                stop_loss=Util.percent_change(price, -config.STOP_LOSS_PERCENT),
+                trailing_stop_loss_max=float("-inf"),
+                trailing_stop_loss=Util.percent_change(
+                    price, -config.TRAILING_STOP_LOSS_PERCENT
+                ),
+            )
         else:
-            api_resp = super(Binance, self).create_order(**kwargs)
+            api_resp = super(Binance, self).create_order(**params)
+            return Order(
+                ticker=kwargs["symbol"],
+                purchase_datetime=parse(api_resp["transactTime"]),
+                price=api_resp["price"],
+                side=api_resp["side"],
+                size=api_resp["executedQty"],
+                type="market",
+                status="TEST_MODE" if Config.TEST else "LIVE",
+                take_profit=Util.percent_change(
+                    api_resp["price"], config.TAKE_PROFIT_PERCENT
+                ),
+                stop_loss=Util.percent_change(api_resp["price"], -config.STOP_LOSS_PERCENT),
+                trailing_stop_loss_max=float("-inf"),
+                trailing_stop_loss=Util.percent_change(
+                    api_resp["price"], -config.TRAILING_STOP_LOSS_PERCENT
+                ),
+            )
 
-        return Order(
-            ticker=kwargs["symbol"],
-            purchase_datetime=parse(api_resp["transactTime"]),
-            price=api_resp["price"],
-            side=api_resp["side"],
-            size=api_resp["executedQty"],
-            type="market",
-            status="TEST_MODE" if Config.TEST else "LIVE",
-            take_profit=Util.percent_change(
-                api_resp["price"], config.TAKE_PROFIT_PERCENT
-            ),
-            stop_loss=Util.percent_change(api_resp["price"], -config.STOP_LOSS_PERCENT),
-            trailing_stop_loss_max=float("-inf"),
-            trailing_stop_loss=Util.percent_change(
-                api_resp["price"], -config.TRAILING_STOP_LOSS_PERCENT
-            ),
-        )
+
 
     def get_tickers(self, quote_ticker: str) -> List[Ticker]:
         api_resp = super(Binance, self).get_exchange_info()

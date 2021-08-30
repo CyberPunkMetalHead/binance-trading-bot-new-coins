@@ -89,7 +89,7 @@ class Config:
                                             if broker_value < 1:
                                                 broker_value = broker_value * 100
                                             if broker_value > 100:
-                                                logger.error(
+                                                errLogger.error(
                                                     "Invalid value for [{}]".format(
                                                         broker_setting
                                                     )

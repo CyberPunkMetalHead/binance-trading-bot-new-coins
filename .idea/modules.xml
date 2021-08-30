@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/binance-trading-bot-new-coins.iml" filepath="$PROJECT_DIR$/.idea/binance-trading-bot-new-coins.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/trading-bot-new-coins.iml" filepath="$PROJECT_DIR$/.idea/trading-bot-new-coins.iml" />
     </modules>
   </component>
 </project>

@@ -1,6 +1,6 @@
 from broker import Broker
 from util import Config
-from typing import List, Dict, NoReturn
+from typing import List, Dict, NoReturn, Tuple
 import logging
 from util.types import BrokerType, Ticker, Order, Sold
 from util import Util
@@ -19,9 +19,8 @@ class Bot:
 
         self._pending_remove = []
 
-        self.all_tickers = self.broker.get_tickers(self.config.QUOTE_TICKER)
         self.ticker_seen_dict = []
-        self.generate_ticker_seen_dict()
+        self.all_tickers, self.ticker_seen_dict = self.get_starting_tickers()
 
         # create / load files
         self.orders: Dict[str, Order] = {}
@@ -125,16 +124,20 @@ class Bot:
             logger.info(f"[{self.broker.brokerType}]\tSaving..")
             self.save()
 
-    def generate_ticker_seen_dict(self) -> NoReturn:
+    def get_starting_tickers(self) -> Tuple[List[Ticker], Dict[str, bool]]:
         """
         This method should be used once before starting the loop.
         The value for every ticker detected before the loop is set to True in the ticker_seen_dict.
         All the new tickers detected during the loop will have a value of False.
         """
-        ticker_seen_dict = {}
-        for ticker in self.all_tickers:
+
+        tickers = self.broker.get_tickers(self.config.QUOTE_TICKER)
+        ticker_seen_dict: Dict[str, bool] = {}
+
+        for ticker in tickers:
             ticker_seen_dict[ticker.ticker] = True
-        self.ticker_seen_dict = ticker_seen_dict
+
+        return tickers, ticker_seen_dict
 
     def get_new_tickers(self) -> List[Ticker]:
         """
@@ -234,14 +237,14 @@ class Bot:
                 self.orders[new_ticker.ticker] = order
 
             except Exception as e:
-                logger.error(e)
+                errLogger.error(traceback.format_exc())
 
             else:
                 logger.info(
                     f"[{self.broker.brokerType}]\tOrder created with {size} on {new_ticker.ticker}"
                 )
         else:
-            logger.error(
+            errLogger.error(
                 f"[{self.broker.brokerType}]\tNew new_ticker detected, but {new_ticker.ticker} is currently in "
                 f"portfolio, or {self.config.QUOTE_TICKER} does not match"
             )

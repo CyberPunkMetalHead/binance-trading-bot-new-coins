@@ -3,6 +3,12 @@ from bot import Bot
 from util.types import Order, Ticker
 from util import Util
 from util import Config
+import logging
+
+# setup logging
+Util.setup_logging(name="new-coin-bot", level=Config.PROGRAM_OPTIONS["LOG_LEVEL"])
+
+logger = logging.getLogger(__name__)
 
 
 class TestBot(TestCase):
@@ -22,6 +28,29 @@ class TestBot(TestCase):
         self.Binance.ticker_seen_dict = {"BTCUSDT": True}
         actual = self.Binance.get_new_tickers()
         self.assertEqual(len(actual), expected - 1)
+
+    def test_purchase(self):
+        tickers, ticker_dict = self.FTX.get_starting_tickers()
+        self.FTX.all_tickers = [t for t in tickers if t.ticker != 'BTC/USDT']
+        ticker_dict.pop('BTC/USDT')
+        self.FTX.ticker_seen_dict = ticker_dict
+        new_tickers = self.FTX.get_new_tickers()
+
+        for new_ticker in new_tickers:
+            self.FTX.process_new_ticker(new_ticker)
+
+        self.assertTrue('BTC/USDT' in self.FTX.orders)
+
+        tickers, ticker_dict = self.Binance.get_starting_tickers()
+        self.Binance.all_tickers = [t for t in tickers if t.ticker != 'BTCUSDT']
+        ticker_dict.pop('BTCUSDT')
+        self.Binance.ticker_seen_dict = ticker_dict
+        new_tickers = self.Binance.get_new_tickers()
+
+        for new_ticker in new_tickers:
+            self.Binance.process_new_ticker(new_ticker)
+
+        self.assertTrue('BTCUSDT' in self.Binance.orders)
 
     def test_convert_size(self):
         ticker = Ticker(ticker="BTC/USDT", base_ticker="BTC", quote_ticker="USDT")
