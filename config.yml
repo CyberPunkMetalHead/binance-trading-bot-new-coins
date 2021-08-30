@@ -1,7 +1,7 @@
 ---
 TRADE_OPTIONS:
   # How often to check for posts and run the script in seconds
-  RUN_EVERY: 10
+  FREQUENCY_SECONDS: 10
   TEST: True
 
   #  Brokers to run.  Make sure to set API keys in auth.yml
