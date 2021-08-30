@@ -50,9 +50,7 @@ class Bot:
             # basically the sell block and update TP and SL logic
             if len(self.orders) > 0:
                 logger.debug(
-                    "Active [{}] Order Tickers: []".format(
-                        self.broker.brokerType, self.orders
-                    )
+                    f"[{self.broker.brokerType}]\tActive Order Tickers: [{self.orders}]"
                 )
 
                 for key, stored_order in self.orders.items():
@@ -66,12 +64,14 @@ class Bot:
             new_tickers = self.get_new_tickers()
 
             if len(new_tickers) > 0:
-                logger.info(f"New tickers detected: {new_tickers}")
+                logger.info(
+                    f"[{self.broker.brokerType}]\tNew tickers detected: {new_tickers}"
+                )
 
                 for new_ticker in new_tickers:
                     self.process_new_ticker(new_ticker)
             else:
-                logger.debug("No new tickers found..")
+                logger.debug(f"[{self.broker.brokerType}]\tNo new tickers found..")
 
             self.interval += 1
 
@@ -84,7 +84,9 @@ class Bot:
 
     def update(self, key, order, **kwargs):
         # This is for testing
-        current_price = kwargs.get('current_price', self.broker.get_current_price(order.ticker))
+        current_price = kwargs.get(
+            "current_price", self.broker.get_current_price(order.ticker)
+        )
 
         # if the price is decreasing and is below the stop loss
         if current_price < order.stop_loss:
@@ -105,7 +107,6 @@ class Bot:
         elif current_price < order.trailing_stop_loss:
             self.close_trade(order, current_price, order.price)
 
-
     def periodic_update(self):
         """
         log an update about every LOG_INFO_UPDATE_INTERVAL minutes
@@ -121,7 +122,7 @@ class Bot:
             == 0
         ):
             logger.info(f"[{self.broker.brokerType}] ORDERS UPDATE:\n\t{self.orders}")
-            logger.info("Saving..")
+            logger.info(f"[{self.broker.brokerType}]\tSaving..")
             self.save()
 
     def generate_ticker_seen_dict(self) -> NoReturn:
@@ -141,7 +142,7 @@ class Bot:
         The value of the new tickers in ticker_seen_dict will be set to True to make them not get detected again.
         """
         new_tickers = []
-        logger.debug("Getting all tickers..")
+        logger.debug(f"[{self.broker.brokerType}]\tGetting all tickers..")
         all_tickers_recheck = self.broker.get_tickers(self.config.QUOTE_TICKER)
 
         if len(all_tickers_recheck) != self.ticker_seen_dict:
@@ -163,7 +164,7 @@ class Bot:
         )
 
         logger.info(
-            f"[{order.ticker.ticker}] Updated:\n\tTrailing Stop-Loss: {round(order.trailing_stop_loss, 3)}"
+            f"[{self.broker.brokerType}]\t[{order.ticker.ticker}] Updated:\n\tTrailing Stop-Loss: {round(order.trailing_stop_loss, 3)}"
         )
 
         return order
@@ -171,15 +172,19 @@ class Bot:
     def close_trade(self, order: Order, current_price: float, stored_price: float):
 
         sell: Order = self.broker.place_order(
-            self.config, ticker=order.ticker, side="sell", size=order.size, current_price=current_price
+            self.config,
+            ticker=order.ticker,
+            side="sell",
+            size=order.size,
+            current_price=current_price,
         )
         if Config.TEST:
             logger.info(
-                f"[TEST MODE] - Sold [{order.ticker.ticker}] at {(current_price - stored_price) / stored_price * 100}"
+                f"[{self.broker.brokerType}]\t[TEST MODE] - Sold [{order.ticker.ticker}] at {(current_price - stored_price) / stored_price * 100}"
             )
         else:
             logger.info(
-                f"Sold [{order.ticker.ticker}] at {(current_price - stored_price) / stored_price * 100}"
+                f"[{self.broker.brokerType}]\tSold [{order.ticker.ticker}] at {(current_price - stored_price) / stored_price * 100}"
             )
 
         # pending remove order from json file
@@ -209,7 +214,9 @@ class Bot:
             new_ticker.ticker not in self.orders
             and self.config.QUOTE_TICKER in new_ticker.quote_ticker
         ):
-            logger.info(f"Preparing to buy {new_ticker.ticker}")
+            logger.info(
+                f"[{self.broker.brokerType}]\tPreparing to buy {new_ticker.ticker}"
+            )
 
             price = self.broker.get_current_price(new_ticker)
             size = self.broker.convert_size(
@@ -219,7 +226,7 @@ class Bot:
             try:
 
                 logger.info(
-                    f"Placing [{'TEST' if self.config.TEST else 'LIVE'}] Order.."
+                    f"[{self.broker.brokerType}]\tPlacing [{'TEST' if self.config.TEST else 'LIVE'}] Order.."
                 )
                 order = self.broker.place_order(
                     self.config, ticker=new_ticker, size=size, side="BUY"
@@ -230,11 +237,13 @@ class Bot:
                 logger.error(e)
 
             else:
-                logger.info(f"Order created with {size} on {new_ticker.ticker}")
+                logger.info(
+                    f"[{self.broker.brokerType}]\tOrder created with {size} on {new_ticker.ticker}"
+                )
         else:
             logger.error(
-                f"New new_ticker detected, but {new_ticker.ticker} is currently in portfolio, "
-                f"or {self.config.QUOTE_TICKER} does not match"
+                f"[{self.broker.brokerType}]\tNew new_ticker detected, but {new_ticker.ticker} is currently in "
+                f"portfolio, or {self.config.QUOTE_TICKER} does not match"
             )
 
     def save(self):
