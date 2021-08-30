@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 BROKERS = ["BINANCE", "FTX"]
 
-BrokerType = Union['FTX', 'BINANCE']
+BrokerType = Union["FTX", "BINANCE"]
 ActionType = Union["Buy", "Sell"]
 
 

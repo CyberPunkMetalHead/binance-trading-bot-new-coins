@@ -107,7 +107,9 @@ class FTX(FtxClient, Broker):
     @FtxClient.authentication_required
     def place_order(self, config: Config, *args, **kwargs) -> Order:
         if Config.TEST:
-            price = kwargs.get('current_price', self.get_current_price(kwargs["ticker"]))
+            price = kwargs.get(
+                "current_price", self.get_current_price(kwargs["ticker"])
+            )
             return Order(
                 ticker=kwargs["ticker"],
                 purchase_datetime=datetime.now(),
@@ -118,8 +120,10 @@ class FTX(FtxClient, Broker):
                 status="TEST_MODE",
                 take_profit=Util.percent_change(price, config.TAKE_PROFIT_PERCENT),
                 stop_loss=Util.percent_change(price, -config.STOP_LOSS_PERCENT),
-                trailing_stop_loss_max=float('-inf'),
-                trailing_stop_loss=Util.percent_change(price, -config.TRAILING_STOP_LOSS_PERCENT)
+                trailing_stop_loss_max=float("-inf"),
+                trailing_stop_loss=Util.percent_change(
+                    price, -config.TRAILING_STOP_LOSS_PERCENT
+                ),
             )
 
         else:
@@ -134,10 +138,16 @@ class FTX(FtxClient, Broker):
                 size=api_resp["size"],
                 type="market",
                 status="LIVE",
-                take_profit=Util.percent_change(api_resp["price"], config.TAKE_PROFIT_PERCENT),
-                stop_loss=Util.percent_change(api_resp["price"], -config.STOP_LOSS_PERCENT),
-                trailing_stop_loss_max=float('-inf'),
-                trailing_stop_loss=Util.percent_change(api_resp["price"], -config.TRAILING_STOP_LOSS_PERCENT)
+                take_profit=Util.percent_change(
+                    api_resp["price"], config.TAKE_PROFIT_PERCENT
+                ),
+                stop_loss=Util.percent_change(
+                    api_resp["price"], -config.STOP_LOSS_PERCENT
+                ),
+                trailing_stop_loss_max=float("-inf"),
+                trailing_stop_loss=Util.percent_change(
+                    api_resp["price"], -config.TRAILING_STOP_LOSS_PERCENT
+                ),
             )
 
     def convert_size(self, config: Config, ticker: Ticker, price: float) -> float:
@@ -156,11 +166,11 @@ class Binance(BinanceClient, Broker):
         return float(self.futures_mark_price(symbol=ticker.ticker)["markPrice"])
 
     def place_order(self, config: Config, *args, **kwargs) -> Order:
-        kwargs['symbol'] = kwargs["ticker"].ticker
+        kwargs["symbol"] = kwargs["ticker"].ticker
         del kwargs["ticker"]
-        del kwargs['current_price']
+        del kwargs["current_price"]
 
-        kwargs['type'] = 'market'
+        kwargs["type"] = "market"
 
         if Config.TEST:
             api_resp = super(Binance, self).create_test_order(**kwargs)
@@ -175,10 +185,14 @@ class Binance(BinanceClient, Broker):
             size=api_resp["executedQty"],
             type="market",
             status="TEST_MODE" if Config.TEST else "LIVE",
-            take_profit=Util.percent_change(api_resp["price"], config.TAKE_PROFIT_PERCENT),
+            take_profit=Util.percent_change(
+                api_resp["price"], config.TAKE_PROFIT_PERCENT
+            ),
             stop_loss=Util.percent_change(api_resp["price"], -config.STOP_LOSS_PERCENT),
-            trailing_stop_loss_max=float('-inf'),
-            trailing_stop_loss=Util.percent_change(api_resp["price"], -config.TRAILING_STOP_LOSS_PERCENT)
+            trailing_stop_loss_max=float("-inf"),
+            trailing_stop_loss=Util.percent_change(
+                api_resp["price"], -config.TRAILING_STOP_LOSS_PERCENT
+            ),
         )
 
     def get_tickers(self, quote_ticker: str) -> List[Ticker]:
@@ -200,8 +214,8 @@ class Binance(BinanceClient, Broker):
     def convert_size(self, config: Config, ticker: Ticker, price: float) -> float:
 
         info = super(Binance, self).get_symbol_info(symbol=ticker.ticker)
-        step_size = info['filters'][2]['stepSize']
-        lot_size = step_size.index('1') - 1
+        step_size = info["filters"][2]["stepSize"]
+        lot_size = step_size.index("1") - 1
         lot_size = max(lot_size, 0)
 
         # calculate the volume in coin from QUANTITY in USDT (default)
@@ -211,6 +225,6 @@ class Binance(BinanceClient, Broker):
         if lot_size == 0:
             size = int(size)
         else:
-            size = float('{:.{}f}'.format(size, lot_size))
+            size = float("{:.{}f}".format(size, lot_size))
 
         return size

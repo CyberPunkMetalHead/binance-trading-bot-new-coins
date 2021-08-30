@@ -9,13 +9,10 @@ import traceback
 Config.load_global_config()
 
 # setup logging
-Util.setup_logging(
-    name="new-coin-bot",
-    level=Config.PROGRAM_OPTIONS['LOG_LEVEL']
-)
+Util.setup_logging(name="new-coin-bot", level=Config.PROGRAM_OPTIONS["LOG_LEVEL"])
 
 logger = logging.getLogger(__name__)
-logging.getLogger('urllib3').setLevel('INFO')
+logging.getLogger("urllib3").setLevel("INFO")
 errLogger = logging.getLogger("error_log")
 errLogger.propagate = False
 
