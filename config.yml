@@ -1,17 +1,42 @@
 ---
 TRADE_OPTIONS:
-  # In your pairing coin
-  QUANTITY: 30
-  # BTCUSDT will be bought for example
-  PAIRING: USDT
   # How often to check for posts and run the script in seconds
   RUN_EVERY: 10
   TEST: True
-  SL: 3
-  TP: 3
-  ENABLE_TSL: True
-  TSL: 2
-  TTP: 2
+
+  #  Brokers to run.  Make sure to set API keys in auth.yml
+  BROKERS:
+    BINANCE:
+      ENABLED: True
+      # quantify of QUOTE_TICKER (below) to be bought
+      QUANTITY: 30
+      # For example, BTCUSDT will be bought with pairing 'USDT'
+      QUOTE_TICKER: 'USDT'
+      # Most users will not have a Binance subaccount
+      SUBACCOUNT: None
+      # Auto-sell if price goes X% of original purchase price
+      STOP_LOSS_PERCENT: 20
+      # Auto-sell if price goes above Y% of original purchase price
+      # TAKE_PROFIT_PERCENT is **IGNORED** if ENABLE_TRAILING_STOP_LOSS is True
+      TAKE_PROFIT_PERCENT: 30
+      # TAKE_PROFIT_PERCENT is **IGNORED** if ENABLE_TRAILING_STOP_LOSS is True
+      ENABLE_TRAILING_STOP_LOSS: True
+      #  Activate trailing stop loss once priee is Z% above original purchase price
+      TRAILING_STOP_LOSS_ACTIVATION: 35
+      # Auto-sell if price goes X% below maximum price after activation
+      TRAILING_STOP_LOSS_PERCENT: 10
+
+    FTX:
+      ENABLED: True
+      QUANTITY: 30
+      SUBACCOUNT: None
+      QUOTE_TICKER: 'USDT'
+      STOP_LOSS_PERCENT: 3
+      TAKE_PROFIT_PERCENT: 3
+      ENABLE_TRAILING_STOP_LOSS: True
+      TRAILING_STOP_LOSS_ACTIVATION: 2
+      TRAILING_STOP_LOSS_PERCENT: 2
+
 PROGRAM_OPTIONS:
-  LOG_LEVEL: INFO
+  LOG_LEVEL: DEBUG
   LOG_INFO_UPDATE_INTERVAL: 2
