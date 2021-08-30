@@ -259,3 +259,5 @@ cython_debug/
 .idea/misc.xml
 
 .idea/binance-trading-bot-new-coins.iml
+
+config.yml
