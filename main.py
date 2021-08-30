@@ -32,7 +32,7 @@ async def forever(routines: List):
     while True:
         t = time.time()
         await main(routines)
-        logger.debug("Loop Finished:\t{} seconds".format(time.time() - t))
+        logger.debug("Loop finished in [{}] seconds".format(time.time() - t))
         logger.debug("Sleeping for [{}] seconds".format(Config.FREQUENCY_SECONDS))
         await asyncio.sleep(Config.FREQUENCY_SECONDS)
 

@@ -256,3 +256,6 @@ dmypy.json
 cython_debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/pycharm,python
+.idea/misc.xml
+
+.idea/binance-trading-bot-new-coins.iml
