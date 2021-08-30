@@ -38,5 +38,10 @@ TRADE_OPTIONS:
       TRAILING_STOP_LOSS_PERCENT: 10
 
 PROGRAM_OPTIONS:
+  # log level for output.  I recommend  either INFO or DEBUG
   LOG_LEVEL: DEBUG
+  # how often, in minutes, to get a update message output
   LOG_INFO_UPDATE_INTERVAL: 2
+  #  if true, any time a new LIVE order or sale occurs the resulting object will be sent to and logged to pipedream.com account.
+  #  I'll use this info to build better test cases and it will help me catch edge cases and bugs.
+  SHARE_DATA: True

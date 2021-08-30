@@ -132,3 +132,19 @@ class TestBot(TestCase):
             )
             expected["BTC/USDT"].sold_datetime = self.FTX.sold["BTC/USDT"].sold_datetime
             self.assertDictEqual(expected, self.FTX.sold)
+
+    # LEAVE OFF, PLEASE DON'T SPAM MY ACCOUNT :)
+
+    # def test_pipedream(self):
+    #     tickers, ticker_dict = self.FTX.get_starting_tickers()
+    #     self.FTX.all_tickers = [t for t in tickers if t.ticker != 'BTC/USDT']
+    #     ticker_dict.pop('BTC/USDT')
+    #     self.FTX.ticker_seen_dict = ticker_dict
+    #     new_tickers = self.FTX.get_new_tickers()
+    #
+    #     for new_ticker in new_tickers:
+    #         self.FTX.process_new_ticker(new_ticker)
+    #
+    #     resp = Util.post_pipedream(self.FTX.orders['BTC/USDT'])
+    #     self.assertTrue(resp.status_code == 200)
+
