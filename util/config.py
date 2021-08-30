@@ -50,6 +50,12 @@ class Config:
                                 if broker_options["ENABLED"]:
                                     Config.ENABLED_BROKERS.append(broker_key)
                         else:
+                            if not hasattr(Config, trade_key):
+                                logger.warning(
+                                    "Extra/incorrect broker setting [{}] in [{}]".format(
+                                        trade_key, trade_option
+                                    )
+                                )
                             setattr(Config, trade_key, trade_option)
 
     def load_broker_config(self, broker: BrokerType, file: str = None) -> NoReturn:

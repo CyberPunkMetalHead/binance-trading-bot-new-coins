@@ -1,7 +1,7 @@
 ---
 TRADE_OPTIONS:
   # How often to check for posts and run the script in seconds
-  RUN_EVERY: 10
+  FREQUENCY_SECONDS: 5
   TEST: True
 
   #  Brokers to run.  Make sure to set API keys in auth.yml
@@ -21,7 +21,7 @@ TRADE_OPTIONS:
       TAKE_PROFIT_PERCENT: 30
       # TAKE_PROFIT_PERCENT is **IGNORED** if ENABLE_TRAILING_STOP_LOSS is True
       ENABLE_TRAILING_STOP_LOSS: True
-      #  Activate trailing stop loss once priee is Z% above original purchase price
+      #  Activate trailing stop loss once price is Z% above original purchase price
       TRAILING_STOP_LOSS_ACTIVATION: 35
       # Auto-sell if price goes X% below maximum price after activation
       TRAILING_STOP_LOSS_PERCENT: 10
