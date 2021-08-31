@@ -30,13 +30,13 @@ async def main():
     tbot = Bot(config["telegram"]["token"])
     chat_id = int(config["telegram"]["chat_id"])
     chat = Chat(chat_id, "private", bot=tbot)
-    chat.send_message(f"starting binance watcher in {socket.gethostname()}")
 
     sock = bm.ticker_socket()
 
     tickers = await client.get_all_tickers()
     coins = set([item["symbol"] for item in tickers])
 
+    chat.send_message(f"starting binance watcher in {socket.gethostname()}, current number of coins: {len(coins)}")
     # then start receiving messages
     async with sock:
         while True:
