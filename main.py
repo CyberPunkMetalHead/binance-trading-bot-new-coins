@@ -232,7 +232,6 @@ def main():
             print(e)
 
         diff = (datetime.utcnow() - started_at).total_seconds()
-        print(diff)
         if diff < frequency_seconds:
             to_sleep = frequency_seconds - diff
             print('sleeping {}s'.format(round(to_sleep, 2)))
