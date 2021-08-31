@@ -102,7 +102,7 @@ def handle_new_coin(new_coins, qty, order, pairing, tp, sl, test_mode):
             print(f"New coin detected, but {coin['symbol']} is currently in portfolio, or {pairing} does not match")
 
 
-def handle_coin(coin, order, pairing, enable_tsl, tp, ttp, tsl, sl, test_mode):
+def check_coin_order(coin, order, pairing, enable_tsl, tp, ttp, tsl, sl, test_mode):
     """Handle coin."""
     coin_order = order[coin]
     # store some necessary trade info for a sell
@@ -214,7 +214,7 @@ def main():
             if os.path.isfile('order.json'):
                 order = load_order('order.json')
                 for coin in list(order):
-                    handle_coin(coin, order, pairing, enable_tsl, tp, ttp, tsl, sl, test_mode)
+                    check_coin_order(coin, order, pairing, enable_tsl, tp, ttp, tsl, sl, test_mode)
 
             else:
                 order = {}
