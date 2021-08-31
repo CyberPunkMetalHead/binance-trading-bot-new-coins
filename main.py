@@ -33,21 +33,20 @@ def generate_coin_seen_dict(all_coins):
     return coin_seen_dict
 
 
-def get_new_coins(coin_seen_dict):
+def get_new_coin(coin_seen_dict):
     """
-    This method checks if there are new coins listed and returns them in a list.
+    This method checks if there are new coins listed and returns the first found.
     The value of the new coins in coin_seen_dict will be set to True to make them not get detected again.
     """
-    result = []
     all_coins_recheck = get_all_coins()
 
     for new_coin in all_coins_recheck:
         if not coin_seen_dict[new_coin['symbol']]:
-            result += [new_coin]
             # this line ensures the new coin isn't detected again
             coin_seen_dict[new_coin['symbol']] = True
+            return new_coin
 
-    return result
+    return None
 
 
 def get_price(coin, pairing):
@@ -160,52 +159,50 @@ def main():
                 order = {}
 
             # check if new coins are listed
-            new_coins = get_new_coins(coin_seen_dict)
+            coin = get_new_coin(coin_seen_dict)
 
             # the buy block and logic pass
-            if len(new_coins) > 0:
+            if coin:
 
-                print(f'New coins detected: {new_coins}')
+                print(f'New coin detected: {coin}')
 
-                for coin in new_coins:
+                # buy if the coin hasn't already been bought
+                if coin['symbol'] not in order and pairing in coin['symbol']:
+                    symbol_only = coin['symbol'].split(pairing)[0]
+                    print(f"Preparing to buy {coin['symbol']}")
 
-                    # buy if the coin hasn't already been bought
-                    if coin['symbol'] not in order and pairing in coin['symbol']:
-                        symbol_only = coin['symbol'].split(pairing)[0]
-                        print(f"Preparing to buy {coin['symbol']}")
+                    price = get_price(symbol_only, pairing)
+                    volume = convert_volume(coin['symbol'], qty, price)
 
-                        price = get_price(symbol_only, pairing)
-                        volume = convert_volume(coin['symbol'], qty, price)
+                    try:
+                        # Run a test trade if true
+                        if config['TRADE_OPTIONS']['TEST']:
+                            order[coin['symbol']] = {
+                                        'symbol':symbol_only+pairing,
+                                        'price':price,
+                                        'volume':volume,
+                                        'time':datetime.timestamp(datetime.now()),
+                                        'tp': tp,
+                                        'sl': sl
+                                        }
 
-                        try:
-                            # Run a test trade if true
-                            if config['TRADE_OPTIONS']['TEST']:
-                                order[coin['symbol']] = {
-                                            'symbol':symbol_only+pairing,
-                                            'price':price,
-                                            'volume':volume,
-                                            'time':datetime.timestamp(datetime.now()),
-                                            'tp': tp,
-                                            'sl': sl
-                                            }
+                            print('PLACING TEST ORDER')
 
-                                print('PLACING TEST ORDER')
-
-                            # place a live order if False
-                            else:
-                                order[coin['symbol']] = create_order(symbol_only+pairing, volume, 'BUY')
-                                order[coin['symbol']]['tp'] = tp
-                                order[coin['symbol']]['sl'] = sl
-
-                        except Exception as e:
-                            print(e)
-
+                        # place a live order if False
                         else:
-                            print(f"Order created with {volume} on {coin['symbol']}")
+                            order[coin['symbol']] = create_order(symbol_only+pairing, volume, 'BUY')
+                            order[coin['symbol']]['tp'] = tp
+                            order[coin['symbol']]['sl'] = sl
 
-                            store_order('order.json', order)
+                    except Exception as e:
+                        print(e)
+
                     else:
-                        print(f"New coin detected, but {coin['symbol']} is currently in portfolio, or {pairing} does not match")
+                        print(f"Order created with {volume} on {coin['symbol']}")
+
+                        store_order('order.json', order)
+                else:
+                    print(f"New coin detected, but {coin['symbol']} is currently in portfolio, or {pairing} does not match")
 
             else:
                 pass
