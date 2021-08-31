@@ -2,9 +2,6 @@ from auth.binance_auth import *
 
 client = load_binance_creds('auth/auth.yml')
 
-def get_price(coin):
-     return client.get_ticker(symbol=coin)['lastPrice']
-
 
 def convert_volume(coin, quantity, last_price):
     """Converts the volume given in QUANTITY from USDT to the each coin's volume"""

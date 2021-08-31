@@ -8,8 +8,11 @@
     # in minutes
     RUN_EVERY: 0.025
     TEST: True
+    # stop loss percentage
     SL: 3
+    # Take profit percentage
     TP: 3
+    # enable take profit/stop loss
     ENABLE_TSL: True
     TSL: 2
     TTP: 2

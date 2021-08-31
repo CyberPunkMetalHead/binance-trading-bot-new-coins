@@ -1,7 +1,6 @@
 import yaml
 
 from binance.client import Client
-from binance.exceptions import BinanceAPIException
 
 
 def load_binance_creds(file):
