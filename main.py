@@ -65,7 +65,7 @@ def add_updated_all_coins_to_queue(queue):
     queue += [all_coins_updated]
 
 
-def make_threads_to_request_all_coins(queue, interval=0.05, max_amount_of_threads=20, max_queue_length=20):
+def make_threads_to_request_all_coins(queue, interval=0.1, max_amount_of_threads=20, max_queue_length=20):
     """
     This method creates threads for new requests to get all coins.
     A new thread is created every interval.
