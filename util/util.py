@@ -9,6 +9,7 @@ import requests
 from requests import Response
 from pydantic import BaseModel
 
+
 class Util:
     FORMAT = "[%(levelname)s] %(asctime)s: %(message)s."
     DATE_FORMAT = None
@@ -30,7 +31,7 @@ class Util:
                     "level": level,
                     "stream": "ext://sys.stdout",
                 },
-                "file": {
+                "error_file": {
                     "class": "logging.handlers.TimedRotatingFileHandler",
                     "when": "midnight",
                     "utc": True,
@@ -39,10 +40,23 @@ class Util:
                     "filename": "{}/errors.log".format(log_dir),
                     "formatter": "standard",
                 },
+                "verbose_file": {
+                    "class": "logging.handlers.TimedRotatingFileHandler",
+                    "when": "midnight",
+                    "utc": True,
+                    "backupCount": 5,
+                    "level": level,
+                    "filename": "{}/verbose_log.log".format(log_dir),
+                    "formatter": "standard",
+                },
             },
             "loggers": {
                 "": {"handlers": ["default"], "level": level},
-                "error_log": {"handlers": ["default", "file"], "level": level},
+                "error_log": {"handlers": ["default", "error_file"], "level": level},
+                "verbose_log": {
+                    "handlers": ["default", "verbose_file"],
+                    "level": "DEBUG",
+                },
             },
         }
 

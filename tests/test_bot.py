@@ -6,7 +6,7 @@ from util import Config
 import logging
 
 # setup logging
-Util.setup_logging(name="new-coin-bot", level=Config.PROGRAM_OPTIONS["LOG_LEVEL"])
+Util.setup_logging(name="new-coin-bot", level="DEBUG")
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +17,10 @@ class TestBot(TestCase):
         self.Binance = Bot("BINANCE")
         self.maxDiff = None
         Config.TEST = True
+        self.FTX.config.STOP_LOSS_PERCENT = 3
+        self.FTX.config.TAKE_PROFIT_PERCENT = 3
+        self.FTX.config.TRAILING_STOP_LOSS_PERCENT = 2
+        self.FTX.config.TRAILING_STOP_LOSS_PERCENT = 2
 
     def test_get_new_tickers(self):
         expected = len(self.FTX.ticker_seen_dict)
@@ -31,26 +35,26 @@ class TestBot(TestCase):
 
     def test_purchase(self):
         tickers, ticker_dict = self.FTX.get_starting_tickers()
-        self.FTX.all_tickers = [t for t in tickers if t.ticker != 'BTC/USDT']
-        ticker_dict.pop('BTC/USDT')
+        self.FTX.all_tickers = [t for t in tickers if t.ticker != "BTC/USDT"]
+        ticker_dict.pop("BTC/USDT")
         self.FTX.ticker_seen_dict = ticker_dict
         new_tickers = self.FTX.get_new_tickers()
 
         for new_ticker in new_tickers:
             self.FTX.process_new_ticker(new_ticker)
 
-        self.assertTrue('BTC/USDT' in self.FTX.orders)
+        self.assertTrue("BTC/USDT" in self.FTX.orders)
 
         tickers, ticker_dict = self.Binance.get_starting_tickers()
-        self.Binance.all_tickers = [t for t in tickers if t.ticker != 'BTCUSDT']
-        ticker_dict.pop('BTCUSDT')
+        self.Binance.all_tickers = [t for t in tickers if t.ticker != "BTCUSDT"]
+        ticker_dict.pop("BTCUSDT")
         self.Binance.ticker_seen_dict = ticker_dict
         new_tickers = self.Binance.get_new_tickers()
 
         for new_ticker in new_tickers:
             self.Binance.process_new_ticker(new_ticker)
 
-        self.assertTrue('BTCUSDT' in self.Binance.orders)
+        self.assertTrue("BTCUSDT" in self.Binance.orders)
 
     def test_convert_size(self):
         ticker = Ticker(ticker="BTC/USDT", base_ticker="BTC", quote_ticker="USDT")
@@ -95,6 +99,7 @@ class TestBot(TestCase):
 
     def test_update_above_max(self):
         self.FTX.orders = Util.load_pickle(Config.TEST_DIR.joinpath("FTX_order_test"))
+        self.FTX.config.TRAILING_STOP_LOSS_PERCENT = 2
 
         for key, value in self.FTX.orders.items():
             self.FTX.update(key, value, current_price=60000)
@@ -106,7 +111,7 @@ class TestBot(TestCase):
 
     def test_update_above_tp(self):
         self.FTX.config.ENABLE_TRAILING_STOP_LOSS = False
-        self.FTX.config.TAKE_PROFIT_PERCENT = 20
+
         self.FTX.orders = Util.load_pickle(
             Config.TEST_DIR.joinpath("FTX_order_test_tsl_off")
         )
@@ -147,4 +152,3 @@ class TestBot(TestCase):
     #
     #     resp = Util.post_pipedream(self.FTX.orders['BTC/USDT'])
     #     self.assertTrue(resp.status_code == 200)
-

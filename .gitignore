@@ -259,3 +259,8 @@ cython_debug/
 config.yml
 
 .idea/trading-bot-new-coins.iml
+
+logs/
+
+*_orders.json
+*_sold.json
