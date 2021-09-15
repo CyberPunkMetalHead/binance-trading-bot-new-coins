@@ -8,6 +8,7 @@ import traceback
 
 logger = logging.getLogger(__name__)
 errLogger = logging.getLogger("error_log")
+verboseLogger = logging.getLogger("verbose_log")
 errLogger.propagate = False
 
 
@@ -167,12 +168,15 @@ class Bot:
         )
 
         logger.info(
-            f"[{self.broker.brokerType}]\t[{order.ticker.ticker}] Updated:\n\tTrailing Stop-Loss: {round(order.trailing_stop_loss, 3)}"
+            f"[{self.broker.brokerType}]\t[{order.ticker.ticker}] Updated:\n\tTrailing Stop-Loss: {round(order.trailing_stop_loss, 3)} "
         )
 
         return order
 
     def close_trade(self, order: Order, current_price: float, stored_price: float):
+        verboseLogger.debug("CLOSING Order:\n{}".format(order.json()))
+        verboseLogger.debug("Current Price:\t{}".format(current_price))
+        verboseLogger.debug("Stored Price:\t{}".format(stored_price))
 
         sell: Order = self.broker.place_order(
             self.config,
@@ -181,9 +185,10 @@ class Bot:
             size=order.size,
             current_price=current_price,
         )
+
         if Config.TEST:
             logger.info(
-                f"[{self.broker.brokerType}]\t[TEST MODE] - Sold [{order.ticker.ticker}] at {(current_price - stored_price) / stored_price * 100}"
+                f"[{self.broker.brokerType}]\t[TEST MODE] - Sold [{order.ticker.ticker}] at {(current_price - stored_price) / stored_price * 100} "
             )
         else:
             logger.info(
@@ -211,17 +216,24 @@ class Bot:
             sold_datetime=sell.purchase_datetime,
         )
 
+        verboseLogger.debug("SOLD:\n{}".format(sold.json()))
+
         self.sold[order.ticker.ticker] = sold
         if not Config.TEST and Config.SHARE_DATA:
             Util.post_pipedream(sold)
 
     def process_new_ticker(self, new_ticker: Ticker):
         # buy if the ticker hasn't already been bought
+        verboseLogger.debug("PROCESSING NEW TICKER:\n{}".format(new_ticker.json()))
+
         if (
             new_ticker.ticker not in self.orders
             and self.config.QUOTE_TICKER in new_ticker.quote_ticker
         ):
             logger.info(
+                f"[{self.broker.brokerType}]\tPreparing to buy {new_ticker.ticker}"
+            )
+            verboseLogger.debug(
                 f"[{self.broker.brokerType}]\tPreparing to buy {new_ticker.ticker}"
             )
 
@@ -235,9 +247,15 @@ class Bot:
                 logger.info(
                     f"[{self.broker.brokerType}]\tPlacing [{'TEST' if self.config.TEST else 'LIVE'}] Order.."
                 )
+                verboseLogger.debug(
+                    f"[{self.broker.brokerType}]\tPlacing [{'TEST' if self.config.TEST else 'LIVE'}] Order.."
+                )
+
                 order = self.broker.place_order(
                     self.config, ticker=new_ticker, size=size, side="BUY"
                 )
+
+                verboseLogger.debug("ORDER RESPONSE:\n{}".format(order.json()))
                 self.orders[new_ticker.ticker] = order
                 if not Config.TEST and Config.SHARE_DATA:
                     Util.post_pipedream(order)
@@ -253,6 +271,10 @@ class Bot:
             errLogger.error(
                 f"[{self.broker.brokerType}]\tNew new_ticker detected, but {new_ticker.ticker} is currently in "
                 f"portfolio, or {self.config.QUOTE_TICKER} does not match"
+            )
+            verboseLogger.error(
+                f"[{self.broker.brokerType}]\tNew new_ticker detected, but {new_ticker.ticker} is currently in "
+                f"portfolio, or {self.config.QUOTE_TICKER} does not match.\n{new_ticker.json()}"
             )
 
     def save(self):

@@ -9,7 +9,9 @@ from util.types import BrokerType, Ticker, Order
 from util.exceptions import *
 from util import Config, Util
 from dateutil.parser import parse
+from util.decorators import retry
 import yaml
+import requests
 
 logger = logging.getLogger(__name__)
 errLogger = logging.getLogger("error_log")
@@ -73,23 +75,28 @@ class FTX(FtxClient, Broker):
         )
 
     def get_tickers(self, quote_ticker: str) -> List[Ticker]:
-        api_resp = super(FTX, self).get_markets()
-        resp = []
-        for ticker in api_resp:
-            if (
-                ticker["type"] == "spot"
-                and ticker["enabled"]
-                and ticker["quoteCurrency"] == quote_ticker
-            ):
-                if ticker["type"] == "spot" and ticker["enabled"]:
-                    resp.append(
-                        Ticker(
-                            ticker=ticker["name"],
-                            base_ticker=ticker["baseCurrency"],
-                            quote_ticker=ticker["quoteCurrency"],
+        try:
+            api_resp = super(FTX, self).get_markets()
+
+            resp = []
+            for ticker in api_resp:
+                if (
+                    ticker["type"] == "spot"
+                    and ticker["enabled"]
+                    and ticker["quoteCurrency"] == quote_ticker
+                ):
+                    if ticker["type"] == "spot" and ticker["enabled"]:
+                        resp.append(
+                            Ticker(
+                                ticker=ticker["name"],
+                                base_ticker=ticker["baseCurrency"],
+                                quote_ticker=ticker["quoteCurrency"],
+                            )
                         )
-                    )
-        return resp
+            return resp
+        except Exception as e:
+            if "FTX is currently down" in e.args[0]:
+                raise BrokerDownException(e.args[0])
 
     @FtxClient.authentication_required
     def get_current_price(self, ticker: Ticker):
@@ -168,16 +175,16 @@ class Binance(BinanceClient, Broker):
     def place_order(self, config: Config, *args, **kwargs) -> Order:
         kwargs["symbol"] = kwargs["ticker"].ticker
         kwargs["type"] = "market"
-        kwargs['quantity'] = kwargs['size']
+        kwargs["quantity"] = kwargs["size"]
         params = {}
 
-        for p in ['quantity', 'side', 'symbol', 'type']:
+        for p in ["quantity", "side", "symbol", "type"]:
             params[p] = kwargs[p]
 
         if Config.TEST:
             # does not return anything.  No error mean request was good.
             api_resp = super(Binance, self).create_test_order(**params)
-            price = self.get_current_price(kwargs['ticker'])
+            price = self.get_current_price(kwargs["ticker"])
             return Order(
                 ticker=kwargs["ticker"],
                 purchase_datetime=datetime.now(),
@@ -206,15 +213,29 @@ class Binance(BinanceClient, Broker):
                 take_profit=Util.percent_change(
                     api_resp["price"], config.TAKE_PROFIT_PERCENT
                 ),
-                stop_loss=Util.percent_change(api_resp["price"], -config.STOP_LOSS_PERCENT),
+                stop_loss=Util.percent_change(
+                    api_resp["price"], -config.STOP_LOSS_PERCENT
+                ),
                 trailing_stop_loss_max=float("-inf"),
                 trailing_stop_loss=Util.percent_change(
                     api_resp["price"], -config.TRAILING_STOP_LOSS_PERCENT
                 ),
             )
 
-
-
+    @retry(
+        (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.HTTPError,
+            NoBrokerResponseException,
+            Exception,
+        ),
+        2,
+        0,
+        None,
+        1,
+        0,
+        logger,
+    )
     def get_tickers(self, quote_ticker: str) -> List[Ticker]:
         api_resp = super(Binance, self).get_exchange_info()
 
