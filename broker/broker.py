@@ -42,7 +42,7 @@ class Broker(ABC):
                 )
 
     @abstractmethod
-    def get_tickers(self, quote_ticker: str) -> List[Ticker]:
+    def get_tickers(self, quote_ticker: str, **kwargs) -> List[Ticker]:
         """
         Returns all coins from Broker
         """
@@ -74,9 +74,27 @@ class FTX(FtxClient, Broker):
             subaccount_name=subaccount,
         )
 
-    def get_tickers(self, quote_ticker: str) -> List[Ticker]:
+    @retry(
+        (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.HTTPError,
+            NoBrokerResponseException,
+            Exception,
+        ),
+        2,
+        0,
+        None,
+        1,
+        0,
+        logger,
+    )
+    def get_tickers(self, quote_ticker: str, **kwargs) -> List[Ticker]:
         try:
             api_resp = super(FTX, self).get_markets()
+
+            test_retry = kwargs.get('test_retry', False)
+            if test_retry:
+                raise requests.exceptions.ConnectionError
 
             resp = []
             for ticker in api_resp:
@@ -95,8 +113,10 @@ class FTX(FtxClient, Broker):
                         )
             return resp
         except Exception as e:
-            if "FTX is currently down" in e.args[0]:
+            if len(e.args) > 0 and "FTX is currently down" in e.args[0]:
                 raise BrokerDownException(e.args[0])
+            else:
+                raise
 
     @FtxClient.authentication_required
     def get_current_price(self, ticker: Ticker):
@@ -176,8 +196,8 @@ class Binance(BinanceClient, Broker):
         kwargs["symbol"] = kwargs["ticker"].ticker
         kwargs["type"] = "market"
         kwargs["quantity"] = kwargs["size"]
-        params = {}
 
+        params = {}
         for p in ["quantity", "side", "symbol", "type"]:
             params[p] = kwargs[p]
 
@@ -185,6 +205,7 @@ class Binance(BinanceClient, Broker):
             # does not return anything.  No error mean request was good.
             api_resp = super(Binance, self).create_test_order(**params)
             price = self.get_current_price(kwargs["ticker"])
+
             return Order(
                 ticker=kwargs["ticker"],
                 purchase_datetime=datetime.now(),
@@ -203,7 +224,7 @@ class Binance(BinanceClient, Broker):
         else:
             api_resp = super(Binance, self).create_order(**params)
             return Order(
-                ticker=kwargs["symbol"],
+                ticker=kwargs["ticker"],
                 purchase_datetime=parse(api_resp["transactTime"]),
                 price=api_resp["price"],
                 side=api_resp["side"],
@@ -236,8 +257,12 @@ class Binance(BinanceClient, Broker):
         0,
         logger,
     )
-    def get_tickers(self, quote_ticker: str) -> List[Ticker]:
+    def get_tickers(self, quote_ticker: str, **kwargs) -> List[Ticker]:
         api_resp = super(Binance, self).get_exchange_info()
+
+        test_retry = kwargs.get('test_retry', False)
+        if test_retry:
+            raise requests.exceptions.ConnectionError
 
         resp = []
         for ticker in api_resp["symbols"]:

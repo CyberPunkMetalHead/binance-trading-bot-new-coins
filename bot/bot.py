@@ -140,16 +140,16 @@ class Bot:
 
         return tickers, ticker_seen_dict
 
-    def get_new_tickers(self) -> List[Ticker]:
+    def get_new_tickers(self, **kwargs) -> List[Ticker]:
         """
         This method checks if there are new tickers listed and returns them in a list.
         The value of the new tickers in ticker_seen_dict will be set to True to make them not get detected again.
         """
         new_tickers = []
         logger.debug(f"[{self.broker.brokerType}]\tGetting all tickers..")
-        all_tickers_recheck = self.broker.get_tickers(self.config.QUOTE_TICKER)
+        all_tickers_recheck = self.broker.get_tickers(self.config.QUOTE_TICKER, **kwargs)
 
-        if len(all_tickers_recheck) != self.ticker_seen_dict:
+        if all_tickers_recheck is not None and len(all_tickers_recheck) != self.ticker_seen_dict:
             new_tickers = [
                 i for i in all_tickers_recheck if i.ticker not in self.ticker_seen_dict
             ]
@@ -222,7 +222,7 @@ class Bot:
         if not Config.TEST and Config.SHARE_DATA:
             Util.post_pipedream(sold)
 
-    def process_new_ticker(self, new_ticker: Ticker):
+    def process_new_ticker(self, new_ticker: Ticker, **kwargs):
         # buy if the ticker hasn't already been bought
         verboseLogger.debug("PROCESSING NEW TICKER:\n{}".format(new_ticker.json()))
 
@@ -252,7 +252,7 @@ class Bot:
                 )
 
                 order = self.broker.place_order(
-                    self.config, ticker=new_ticker, size=size, side="BUY"
+                    self.config, ticker=new_ticker, size=size, side="BUY", **kwargs
                 )
 
                 verboseLogger.debug("ORDER RESPONSE:\n{}".format(order.json()))

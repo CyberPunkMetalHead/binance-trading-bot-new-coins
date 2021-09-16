@@ -4,6 +4,7 @@ from util.types import Order, Ticker
 from util import Util
 from util import Config
 import logging
+import requests
 
 # setup logging
 Util.setup_logging(name="new-coin-bot", level="DEBUG")
@@ -138,6 +139,12 @@ class TestBot(TestCase):
             expected["BTC/USDT"].sold_datetime = self.FTX.sold["BTC/USDT"].sold_datetime
             self.assertDictEqual(expected, self.FTX.sold)
 
+    def test_retry_get_tickers(self):
+        self.FTX.ticker_seen_dict = {"BTC/USDT": True}
+        try:
+            actual = self.FTX.get_new_tickers(test_retry=True)
+        except requests.exceptions.ConnectionError:
+            self.assertEqual(True, True)
     # LEAVE OFF, PLEASE DON'T SPAM MY ACCOUNT :)
 
     # def test_pipedream(self):

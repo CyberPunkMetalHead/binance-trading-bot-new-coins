@@ -44,37 +44,22 @@ def __retry_internal(
             _tries -= 1
             if not _tries:
                 if isinstance(e, requests.exceptions.HTTPError):
-                    if hasattr(f.args[0], "ticker"):
-                        msg = "[{}]\tConnection Refused...SKIPPING".format(
-                            f.args[0].ticker.ticker
-                        )
+                    msg = "Connection Refused...SKIPPING"
                 elif isinstance(e, requests.exceptions.ConnectionError):
-                    if hasattr(f.args[0], "ticker"):
-                        msg = "[{}]\tConnection Refused...SKIPPING".format(
-                            f.args[0].ticker.ticker
-                        )
-
+                    msg = "Connection Refused...SKIPPING"
                 logger.info(msg)
                 raise
 
             if isinstance(e, urllib3.exceptions.MaxRetryError):
-                if hasattr(f.args[0], "ticker"):
-                    msg = "[{}]\tMax Retries Connection Error...retrying x{}".format(
-                        f.args[0].ticker.ticker, tries - _tries
-                    )
+                msg = "Max Retries Connection Error...retrying x{}".format(tries - _tries)
 
-            if isinstance(e, requests.exceptions.HTTPError):
-                if hasattr(f.args[0], "ticker"):
-                    msg = "[{}]\tConnection Forcibly Closed...retrying x{}".format(
-                        f.args[0].ticker.ticker, tries - _tries
-                    )
+            elif isinstance(e, requests.exceptions.HTTPError):
+                msg = "Connection Forcibly Closed...retrying x{}".format(tries - _tries)
+
             elif isinstance(e, requests.exceptions.ConnectionError):
-                if hasattr(f.args[0], "ticker"):
-                    msg = "[{}]\tBad Gateway...retrying x{}".format(
-                        f.args[0].ticker.ticker, tries - _tries
-                    )
+                msg = "Bad Gateway...retrying x{}".format(tries - _tries)
             else:
-                msg = "%s, retrying x%s in %s seconds...", e, tries - _tries, _delay
+                msg = "{}, retrying {} in {} seconds...".format(e, tries - _tries, _delay)
 
             logger.warning(msg)
 
