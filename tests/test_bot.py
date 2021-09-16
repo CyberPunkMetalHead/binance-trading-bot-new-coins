@@ -5,6 +5,7 @@ from util import Util
 from util import Config
 import logging
 import requests
+import binance.exceptions
 
 # setup logging
 Util.setup_logging(name="new-coin-bot", level="DEBUG")
@@ -56,6 +57,21 @@ class TestBot(TestCase):
             self.Binance.process_new_ticker(new_ticker)
 
         self.assertTrue("BTCUSDT" in self.Binance.orders)
+
+    def test_purchase_invalid_symbol(self):
+        tickers, ticker_dict = self.Binance.get_starting_tickers()
+        self.Binance.all_tickers = [t for t in tickers if t.ticker != "BTCUSDT"]
+        ticker_dict.pop("BTCUSDT")
+        self.Binance.ticker_seen_dict = ticker_dict
+        new_tickers = self.Binance.get_new_tickers()
+
+        try:
+            new_tickers[0].ticker = 'INVALIDUSDT'
+            for new_ticker in new_tickers:
+                self.Binance.process_new_ticker(new_ticker)
+        except binance.exceptions.BinanceAPIException:
+            self.assertEqual(True, True)
+
 
     def test_convert_size(self):
         ticker = Ticker(ticker="BTC/USDT", base_ticker="BTC", quote_ticker="USDT")

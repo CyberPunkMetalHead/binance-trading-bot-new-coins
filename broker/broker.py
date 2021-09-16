@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, NoReturn, List
+
+import binance.exceptions
 from ftx.api import FtxClient
 from binance.client import Client as BinanceClient
 from datetime import datetime
@@ -118,6 +120,17 @@ class FTX(FtxClient, Broker):
             else:
                 raise
 
+    @retry(
+        (
+                Exception,
+        ),
+        2,
+        3,
+        None,
+        1,
+        0,
+        logger,
+    )
     @FtxClient.authentication_required
     def get_current_price(self, ticker: Ticker):
         logger.debug("Getting latest price for [{}]".format(ticker.ticker))
@@ -131,6 +144,17 @@ class FTX(FtxClient, Broker):
         except LookupError as e:
             pass
 
+    @retry(
+        (
+                Exception,
+        ),
+        2,
+        3,
+        None,
+        1,
+        0,
+        logger,
+    )
     @FtxClient.authentication_required
     def place_order(self, config: Config, *args, **kwargs) -> Order:
         if Config.TEST:
@@ -188,10 +212,34 @@ class Binance(BinanceClient, Broker):
 
         super().__init__(api_key=key, api_secret=secret)
 
+    @retry(
+        (
+                binance.exceptions.BinanceAPIException,
+                Exception,
+        ),
+        2,
+        3,
+        None,
+        1,
+        0,
+        logger,
+    )
     def get_current_price(self, ticker: Ticker) -> float:
         logger.debug("Getting latest price for [{}]".format(ticker))
         return float(self.futures_mark_price(symbol=ticker.ticker)["markPrice"])
 
+    @retry(
+        (
+                binance.exceptions.BinanceAPIException,
+                Exception,
+        ),
+        2,
+        3,
+        None,
+        1,
+        0,
+        logger,
+    )
     def place_order(self, config: Config, *args, **kwargs) -> Order:
         kwargs["symbol"] = kwargs["ticker"].ticker
         kwargs["type"] = "market"
