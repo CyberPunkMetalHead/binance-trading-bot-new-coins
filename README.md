@@ -2,7 +2,7 @@
 This Binance trading bot detects new coins as soon as they are listed on the Binance exchange and automatically places sell and buy orders. 
 It comes with trailing stop loss and other features.
 
-This open source crypto trading bot should able able to quickly detect new coins listings on Binance and quickly ride the price spike. 
+This open source crypto trading bot should able to quickly detect new coins listings on Binance and quickly ride the price spike. 
 It comes with a live and test mode so naturally, use at your own risk.
 
 
