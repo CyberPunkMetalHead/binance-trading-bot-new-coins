@@ -1,17 +1,24 @@
-# binance-trading-bot-new-coins
-This Binance trading bot detects new coins as soon as they are listed on the Binance exchange and automatically places sell and buy orders. 
-It comes with trailing stop loss and other features.
+# trading-bot-new-coins
+This is a fork of [binance-trading-bot-new-coins](https://github.com/CyberPunkMetalHead/binance-trading-bot-new-coins "binance-trading-bot-new-coins") - credit for this idea goes to him.
 
-This open source crypto trading bot should able able to quickly detect new coins listings on Binance and quickly ride the price spike. 
-It comes with a live and test mode so naturally, use at your own risk.
+This trading bot detects new coins as soon as they are listed on various exchanges, and automatically places sell and buy orders.  Binance and FTX are currently supported. In addition, it comes with trailing stop loss, stop loss, take profit, and other features.
+
+It comes with a live and test mode, so naturally, use it at your own risk.
+
+##### TODO List:
+- Swap to multi-threading?
+- Notification service (Discord/Telegram)
+- Additional tests
+- Additional Exchanges*
+
+#### I want to contribute:
+I would love contributors! Please send a pull request, and I will review it.
+
+\*If you plan to add support for additional exchanges, please review and follow the structure used for the FTX and Binance wrapper classes already implemented.
+
+#### I found a bug/issue:
+Please include any applicable stack traces and logs.  There are currently two log files: `errors.log` and `verbose_log.log`.  Please also attach any relevant information from these files.
 
 
-
-**For a step-by-step guide on how to set it up and configure please see the guide here:** [Binance new coin trading bot guide](https://www.cryptomaton.org/2021/08/15/coding-a-binance-trading-bot-that-detects-new-coins-the-moment-they-are-listed/)
-
-
-
-**The new coins crypto trading bot explained in more detail. See the video linked below for an explanation and rationale behind the bot.**
-
-[![binance new coin listings bot](https://img.youtube.com/vi/mIa9eQDhubs/0.jpg)](https://www.youtube.com/watch?v=mIa9eQDhubs)
-
+#### Changelog:
+- 2021-09-16: New baseline - I've done a poor job tracking changes thus far.
