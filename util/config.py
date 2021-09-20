@@ -2,7 +2,8 @@ import yaml
 from typing import NoReturn
 from pathlib import Path
 import logging
-from util.types import BrokerType, BROKERS
+from util.types import BrokerType, BROKERS, Notification, NotificationAuth
+from notification import NotificationService
 
 logger = logging.getLogger(__name__)
 errLogger = logging.getLogger("error_log")
@@ -24,6 +25,10 @@ class Config:
 
     PROGRAM_OPTIONS = {"LOG_LEVEL": "INFO", "LOG_INFO_UPDATE_INTERVAL": 2}
 
+    NOTIFICATION_SERVICE = NotificationService(
+        [Notification(service="COMMAND_LINE", enabled=True, settings=None)]
+    )
+
     def __init__(self):
         # Default config values
         self.ENABLED = False
@@ -35,6 +40,10 @@ class Config:
         self.ENABLE_TRAILING_STOP_LOSS = True
         self.TRAILING_STOP_LOSS_PERCENT = 10
         self.TRAILING_STOP_LOSS_ACTIVATION = 35
+
+        self.NOTIFICATION_SERVICE = NotificationService(
+            [Notification(service="COMMAND_LINE", enabled=True, settings=None)]
+        )
 
     @classmethod
     def load_global_config(cls, file: str = None) -> NoReturn:
@@ -60,6 +69,34 @@ class Config:
                                     )
                                 )
                             setattr(Config, trade_key, trade_option)
+                elif key == "NOTIFICATION_OPTIONS":
+                    # Command line is always required.
+                    services = [
+                        Notification(
+                            service="COMMAND_LINE", enabled=True, settings=None
+                        )
+                    ]
+
+                    for notification_key, notification_option in value.items():
+                        if notification_option["ENABLED"]:
+                            services.append(
+                                Notification(
+                                    service=notification_key,
+                                    enabled=True,
+                                    settings=notification_option["SETTINGS"]
+                                    if "SETTINGS" in notification_option
+                                    else NotificationService.DEFAULT_SETTINGS,
+                                    auth=NotificationAuth(
+                                        endpoint=notification_option["AUTH"]["ENDPOINT"]
+                                        if "ENDPOINT" in notification_option["AUTH"]
+                                        else None,
+                                        chat_id=notification_option["AUTH"]["CHAT_ID"]
+                                        if "CHAT_ID" in notification_option["AUTH"]
+                                        else None,
+                                    ),
+                                )
+                            )
+                    Config.NOTIFICATION_SERVICE = NotificationService(services)
 
     def load_broker_config(self, broker: BrokerType, file: str = None) -> NoReturn:
         with open(

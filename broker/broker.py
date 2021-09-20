@@ -3,7 +3,6 @@ from typing import Dict, Any, NoReturn, List
 from ftx.api import FtxClient
 from binance.client import Client as BinanceClient
 from datetime import datetime
-import logging
 from typing import Union
 from util.types import BrokerType, Ticker, Order
 from util.exceptions import *
@@ -12,10 +11,9 @@ from dateutil.parser import parse
 from util.decorators import retry
 import yaml
 import requests
+import logging
 
 logger = logging.getLogger(__name__)
-errLogger = logging.getLogger("error_log")
-errLogger.propagate = False
 
 
 class Broker(ABC):
@@ -100,13 +98,17 @@ class FTX(FtxClient, Broker):
 
     @FtxClient.authentication_required
     def get_current_price(self, ticker: Ticker):
-        logger.debug("Getting latest price for [{}]".format(ticker.ticker))
+        Config.NOTIFICATION_SERVICE.send_debug(
+            "Getting latest price for [{}]".format(ticker.ticker)
+        )
         try:
             resp = float(self.get_market(market=ticker.ticker)["last"])
 
             if resp is None:
                 raise GetPriceNoneResponse("None Response from Get Price")
-            logger.info("FTX Price - {} {}".format(ticker.ticker, round(resp, 4)))
+            Config.NOTIFICATION_SERVICE.send_info(
+                "FTX Price - {} {}".format(ticker.ticker, round(resp, 4))
+            )
             return resp
         except LookupError as e:
             pass
@@ -118,6 +120,7 @@ class FTX(FtxClient, Broker):
                 "current_price", self.get_current_price(kwargs["ticker"])
             )
             return Order(
+                broker="FTX",
                 ticker=kwargs["ticker"],
                 purchase_datetime=datetime.now(),
                 price=price,
@@ -138,6 +141,7 @@ class FTX(FtxClient, Broker):
             del kwargs["ticker"]
             api_resp = super(FTX, self).place_order(*args, *kwargs)
             return Order(
+                broker="FTX",
                 ticker=kwargs["ticker"],
                 purchase_datetime=parse(api_resp["createdAt"]),
                 price=api_resp["price"],
@@ -169,7 +173,9 @@ class Binance(BinanceClient, Broker):
         super().__init__(api_key=key, api_secret=secret)
 
     def get_current_price(self, ticker: Ticker) -> float:
-        logger.debug("Getting latest price for [{}]".format(ticker))
+        Config.NOTIFICATION_SERVICE.send_debug(
+            "Getting latest price for [{}]".format(ticker)
+        )
         return float(self.futures_mark_price(symbol=ticker.ticker)["markPrice"])
 
     def place_order(self, config: Config, *args, **kwargs) -> Order:
@@ -186,6 +192,7 @@ class Binance(BinanceClient, Broker):
             api_resp = super(Binance, self).create_test_order(**params)
             price = self.get_current_price(kwargs["ticker"])
             return Order(
+                broker="BINANCE",
                 ticker=kwargs["ticker"],
                 purchase_datetime=datetime.now(),
                 price=price,
@@ -203,6 +210,7 @@ class Binance(BinanceClient, Broker):
         else:
             api_resp = super(Binance, self).create_order(**params)
             return Order(
+                broker="BINANCE",
                 ticker=kwargs["symbol"],
                 purchase_datetime=parse(api_resp["transactTime"]),
                 price=api_resp["price"],
