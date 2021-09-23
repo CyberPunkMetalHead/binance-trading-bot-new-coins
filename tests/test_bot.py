@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class TestBot(TestCase):
     def setUp(self) -> None:
-        Config.load_global_config()
+        # Config.load_global_config()
         self.FTX = Bot("FTX")
         self.Binance = Bot("BINANCE")
         self.maxDiff = None
@@ -25,6 +25,11 @@ class TestBot(TestCase):
         self.FTX.config.TAKE_PROFIT_PERCENT = 3
         self.FTX.config.TRAILING_STOP_LOSS_PERCENT = 2
         self.FTX.config.TRAILING_STOP_LOSS_PERCENT = 2
+
+        self.Binance.config.STOP_LOSS_PERCENT = 3
+        self.Binance.config.TAKE_PROFIT_PERCENT = 3
+        self.Binance.config.TRAILING_STOP_LOSS_PERCENT = 2
+        self.Binance.config.TRAILING_STOP_LOSS_PERCENT = 2
 
     def test_get_new_tickers(self):
         expected = len(self.FTX.ticker_seen_dict)
