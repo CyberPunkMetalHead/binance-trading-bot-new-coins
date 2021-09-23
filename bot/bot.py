@@ -183,13 +183,13 @@ class Bot:
         return order
 
     def close_trade(self, order: Order, current_price: float, stored_price: float):
-        self.config.NOTIFICATION_SERVICE.send_debug(
+        self.config.NOTIFICATION_SERVICE.send_verbose(
             "CLOSING Order:\n{}".format(order.json())
         )
-        self.config.NOTIFICATION_SERVICE.send_debug(
+        self.config.NOTIFICATION_SERVICE.send_verbose(
             "Current Price:\t{}".format(current_price)
         )
-        self.config.NOTIFICATION_SERVICE.send_debug(
+        self.config.NOTIFICATION_SERVICE.send_verbose(
             "Stored Price:\t{}".format(stored_price)
         )
 
@@ -232,7 +232,7 @@ class Bot:
             sold_datetime=sell.purchase_datetime,
         )
 
-        self.config.NOTIFICATION_SERVICE.send_debug("SOLD:\n{}".format(sold.json()))
+        self.config.NOTIFICATION_SERVICE.send_verbose("SOLD:\n{}".format(sold.json()))
 
         self.sold[order.ticker.ticker] = sold
         if not Config.TEST and Config.SHARE_DATA:
@@ -240,7 +240,7 @@ class Bot:
 
     def process_new_ticker(self, new_ticker: Ticker):
         # buy if the ticker hasn't already been bought
-        self.config.NOTIFICATION_SERVICE.send_debug(
+        self.config.NOTIFICATION_SERVICE.send_verbose(
             "PROCESSING NEW TICKER:\n{}".format(new_ticker.json())
         )
 
@@ -251,7 +251,7 @@ class Bot:
             self.config.NOTIFICATION_SERVICE.send_info(
                 f"[{self.broker.brokerType}]\tPreparing to buy {new_ticker.ticker}"
             )
-            self.config.NOTIFICATION_SERVICE.send_debug(
+            self.config.NOTIFICATION_SERVICE.send_verbose(
                 f"[{self.broker.brokerType}]\tPreparing to buy {new_ticker.ticker}"
             )
 
@@ -265,7 +265,7 @@ class Bot:
                 self.config.NOTIFICATION_SERVICE.send_info(
                     f"[{self.broker.brokerType}]\tPlacing [{'TEST' if self.config.TEST else 'LIVE'}] Order.."
                 )
-                self.config.NOTIFICATION_SERVICE.send_debug(
+                self.config.NOTIFICATION_SERVICE.send_verbose(
                     f"[{self.broker.brokerType}]\tPlacing [{'TEST' if self.config.TEST else 'LIVE'}] Order.."
                 )
 
@@ -273,7 +273,7 @@ class Bot:
                     self.config, ticker=new_ticker, size=size, side="BUY"
                 )
 
-                self.config.NOTIFICATION_SERVICE.send_debug(
+                self.config.NOTIFICATION_SERVICE.send_verbose(
                     "ORDER RESPONSE:\n{}".format(order.json())
                 )
                 self.orders[new_ticker.ticker] = order
