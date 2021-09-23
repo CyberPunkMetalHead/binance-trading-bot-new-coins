@@ -16,8 +16,7 @@ import traceback
 class Bot:
     def __init__(self, broker: BrokerType):
         self.broker = Broker.factory(broker)
-        self.config = Config()
-        self.config.load_broker_config(self.broker.brokerType)
+        self.config = Config(self.broker.brokerType)
 
         self._pending_remove = []
 
@@ -50,7 +49,7 @@ class Bot:
 
             # basically the sell block and update TP and SL logic
             if len(self.orders) > 0:
-                self.config.NOTIFICATION_SERVICE.send_debug(
+                Config.NOTIFICATION_SERVICE.send_debug(
                     f"[{self.broker.brokerType}]\tActive Order Tickers: [{self.orders}]"
                 )
 
@@ -65,14 +64,14 @@ class Bot:
             new_tickers = self.get_new_tickers()
 
             if len(new_tickers) > 0:
-                self.config.NOTIFICATION_SERVICE.send_info(
+                Config.NOTIFICATION_SERVICE.send_info(
                     f"[{self.broker.brokerType}]\tNew tickers detected: {new_tickers}"
                 )
 
                 for new_ticker in new_tickers:
                     self.process_new_ticker(new_ticker)
             else:
-                self.config.NOTIFICATION_SERVICE.send_debug(
+                Config.NOTIFICATION_SERVICE.send_debug(
                     f"[{self.broker.brokerType}]\tNo new tickers found.."
                 )
 
@@ -80,7 +79,7 @@ class Bot:
 
         except Exception as e:
             self.save()
-            self.config.NOTIFICATION_SERVICE.send_error(traceback.format_exc())
+            Config.NOTIFICATION_SERVICE.send_error(traceback.format_exc())
 
         finally:
             self.save()
@@ -124,10 +123,10 @@ class Bot:
             )
             == 0
         ):
-            self.config.NOTIFICATION_SERVICE.send_info(
+            Config.NOTIFICATION_SERVICE.send_info(
                 f"[{self.broker.brokerType}] ORDERS UPDATE:\n\t{self.orders}"
             )
-            self.config.NOTIFICATION_SERVICE.send_info(
+            Config.NOTIFICATION_SERVICE.send_info(
                 f"[{self.broker.brokerType}]\tSaving.."
             )
             self.save()
@@ -153,7 +152,7 @@ class Bot:
         The value of the new tickers in ticker_seen_dict will be set to True to make them not get detected again.
         """
         new_tickers = []
-        self.config.NOTIFICATION_SERVICE.send_debug(
+        Config.NOTIFICATION_SERVICE.send_debug(
             f"[{self.broker.brokerType}]\tGetting all tickers.."
         )
         all_tickers_recheck = self.broker.get_tickers(self.config.QUOTE_TICKER)
@@ -176,20 +175,23 @@ class Bot:
             order.trailing_stop_loss_max, -self.config.TRAILING_STOP_LOSS_PERCENT
         )
 
-        self.config.NOTIFICATION_SERVICE.send_info(
+        Config.NOTIFICATION_SERVICE.send_verbose(
+            f"[{self.broker.brokerType}]\t[{order.ticker.ticker}] Updated:\n\tTrailing Stop-Loss: {round(order.trailing_stop_loss, 3)} "
+        )
+        Config.NOTIFICATION_SERVICE.send_info(
             f"[{self.broker.brokerType}]\t[{order.ticker.ticker}] Updated:\n\tTrailing Stop-Loss: {round(order.trailing_stop_loss, 3)} "
         )
 
         return order
 
     def close_trade(self, order: Order, current_price: float, stored_price: float):
-        self.config.NOTIFICATION_SERVICE.send_verbose(
+        Config.NOTIFICATION_SERVICE.send_verbose(
             "CLOSING Order:\n{}".format(order.json())
         )
-        self.config.NOTIFICATION_SERVICE.send_verbose(
+        Config.NOTIFICATION_SERVICE.send_verbose(
             "Current Price:\t{}".format(current_price)
         )
-        self.config.NOTIFICATION_SERVICE.send_verbose(
+        Config.NOTIFICATION_SERVICE.send_verbose(
             "Stored Price:\t{}".format(stored_price)
         )
 
@@ -202,13 +204,10 @@ class Bot:
         )
 
         if Config.TEST:
-            self.config.NOTIFICATION_SERVICE.send_info(
-                f"[{self.broker.brokerType}]\t[TEST MODE] - Sold [{order.ticker.ticker}] at {(current_price - stored_price) / stored_price * 100} "
-            )
+            Config.NOTIFICATION_SERVICE.send_close(order)
+
         else:
-            self.config.NOTIFICATION_SERVICE.send_info(
-                f"[{self.broker.brokerType}]\tSold [{order.ticker.ticker}] at {(current_price - stored_price) / stored_price * 100}"
-            )
+            Config.NOTIFICATION_SERVICE.send_close(order)
 
         # pending remove order from json file
         self._pending_remove.append(order.ticker.ticker)
@@ -232,7 +231,7 @@ class Bot:
             sold_datetime=sell.purchase_datetime,
         )
 
-        self.config.NOTIFICATION_SERVICE.send_verbose("SOLD:\n{}".format(sold.json()))
+        Config.NOTIFICATION_SERVICE.send_verbose("SOLD:\n{}".format(sold.json()))
 
         self.sold[order.ticker.ticker] = sold
         if not Config.TEST and Config.SHARE_DATA:
@@ -240,7 +239,7 @@ class Bot:
 
     def process_new_ticker(self, new_ticker: Ticker):
         # buy if the ticker hasn't already been bought
-        self.config.NOTIFICATION_SERVICE.send_verbose(
+        Config.NOTIFICATION_SERVICE.send_verbose(
             "PROCESSING NEW TICKER:\n{}".format(new_ticker.json())
         )
 
@@ -248,10 +247,10 @@ class Bot:
             new_ticker.ticker not in self.orders
             and self.config.QUOTE_TICKER in new_ticker.quote_ticker
         ):
-            self.config.NOTIFICATION_SERVICE.send_info(
+            Config.NOTIFICATION_SERVICE.send_info(
                 f"[{self.broker.brokerType}]\tPreparing to buy {new_ticker.ticker}"
             )
-            self.config.NOTIFICATION_SERVICE.send_verbose(
+            Config.NOTIFICATION_SERVICE.send_verbose(
                 f"[{self.broker.brokerType}]\tPreparing to buy {new_ticker.ticker}"
             )
 
@@ -262,10 +261,10 @@ class Bot:
 
             try:
 
-                self.config.NOTIFICATION_SERVICE.send_info(
+                Config.NOTIFICATION_SERVICE.send_info(
                     f"[{self.broker.brokerType}]\tPlacing [{'TEST' if self.config.TEST else 'LIVE'}] Order.."
                 )
-                self.config.NOTIFICATION_SERVICE.send_verbose(
+                Config.NOTIFICATION_SERVICE.send_verbose(
                     f"[{self.broker.brokerType}]\tPlacing [{'TEST' if self.config.TEST else 'LIVE'}] Order.."
                 )
 
@@ -273,26 +272,23 @@ class Bot:
                     self.config, ticker=new_ticker, size=size, side="BUY"
                 )
 
-                self.config.NOTIFICATION_SERVICE.send_verbose(
+                Config.NOTIFICATION_SERVICE.send_verbose(
                     "ORDER RESPONSE:\n{}".format(order.json())
                 )
                 self.orders[new_ticker.ticker] = order
                 if not Config.TEST and Config.SHARE_DATA:
                     Util.post_pipedream(order)
 
+                Config.NOTIFICATION_SERVICE.send_entry(order)
             except Exception as e:
-                self.config.NOTIFICATION_SERVICE.send_error(traceback.format_exc())
+                Config.NOTIFICATION_SERVICE.send_error(traceback.format_exc())
 
-            else:
-                self.config.NOTIFICATION_SERVICE.send_info(
-                    f"[{self.broker.brokerType}]\tOrder created with {size} on {new_ticker.ticker}"
-                )
         else:
-            self.config.NOTIFICATION_SERVICE.send_error(
+            Config.NOTIFICATION_SERVICE.send_error(
                 f"[{self.broker.brokerType}]\tNew new_ticker detected, but {new_ticker.ticker} is currently in "
                 f"portfolio, or {self.config.QUOTE_TICKER} does not match"
             )
-            self.config.NOTIFICATION_SERVICE.send_verbose(
+            Config.NOTIFICATION_SERVICE.send_verbose(
                 f"[{self.broker.brokerType}]\tNew new_ticker detected, but {new_ticker.ticker} is currently in "
                 f"portfolio, or {self.config.QUOTE_TICKER} does not match.\n{new_ticker.json()}"
             )

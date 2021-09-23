@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 class TestBot(TestCase):
     def setUp(self) -> None:
+        Config.load_global_config()
         self.FTX = Bot("FTX")
         self.Binance = Bot("BINANCE")
         self.maxDiff = None

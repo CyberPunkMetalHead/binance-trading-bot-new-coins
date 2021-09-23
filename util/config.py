@@ -29,7 +29,7 @@ class Config:
         [Notification(service="COMMAND_LINE", enabled=True, settings=None)]
     )
 
-    def __init__(self):
+    def __init__(self, broker: BrokerType, file: str = None):
         # Default config values
         self.ENABLED = False
         self.SUBACCOUNT = None
@@ -41,9 +41,7 @@ class Config:
         self.TRAILING_STOP_LOSS_PERCENT = 10
         self.TRAILING_STOP_LOSS_ACTIVATION = 35
 
-        self.NOTIFICATION_SERVICE = NotificationService(
-            [Notification(service="COMMAND_LINE", enabled=True, settings=None)]
-        )
+        self.load_broker_config(broker, file)
 
     @classmethod
     def load_global_config(cls, file: str = None) -> NoReturn:
