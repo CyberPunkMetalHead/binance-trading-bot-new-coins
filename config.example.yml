@@ -58,4 +58,18 @@ NOTIFICATION_OPTIONS:
       SEND_ENTRY: True,
       SEND_CLOSE: True,
     AUTH:
-      ENDPOINT: 'DISCORD URL'
+      ENDPOINT: 'https://discord.com/api/webhooks/<...> -> Read readme for more info'
+  TELEGRAM:
+    ENABLED: True
+    SETTINGS:
+      SEND_MESSAGE: True,
+      SEND_ERROR: True,
+      SEND_VERBOSE: False,
+      SEND_WARNING: False,
+      SEND_INFO: False,
+      SEND_DEBUG: False,
+      SEND_ENTRY: True,
+      SEND_CLOSE: True,
+    AUTH:
+      ENDPOINT: 'TOKEN -> Read readme for more info'
+      CHAT_ID: '-XXXXXX -> Read readme for more info'

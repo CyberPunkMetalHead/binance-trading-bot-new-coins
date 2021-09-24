@@ -176,7 +176,7 @@ class Binance(BinanceClient, Broker):
         Config.NOTIFICATION_SERVICE.send_debug(
             "Getting latest price for [{}]".format(ticker)
         )
-        return float(self.futures_mark_price(symbol=ticker.ticker)["markPrice"])
+        return float(self.get_symbol_ticker(symbol=ticker.ticker)["price"])
 
     def place_order(self, config: Config, *args, **kwargs) -> Order:
         kwargs["symbol"] = kwargs["ticker"].ticker

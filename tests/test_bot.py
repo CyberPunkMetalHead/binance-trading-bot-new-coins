@@ -191,6 +191,14 @@ class TestBot(TestCase):
             self.FTX.orders["BTC/USDT"], custom=True, comment="Custom Entry Comment"
         )
 
+    def test_github_failed(self):
+        Config.load_global_config()
+        new_tickers = [Ticker(ticker='YGGUSDT', base_ticker='YGG', quote_ticker='USDT'), Ticker(ticker='SYSUSDT', base_ticker='SYS', quote_ticker='USDT')]
+        for new_ticker in new_tickers:
+            self.Binance.process_new_ticker(new_ticker)
+
+
+
     # LEAVE OFF, PLEASE DON'T SPAM MY ACCOUNT :)
 
     # def test_pipedream(self):

@@ -1,5 +1,5 @@
-# trading-bot-new-coins
-This is a fork of [binance-trading-bot-new-coins](https://github.com/CyberPunkMetalHead/binance-trading-bot-new-coins "binance-trading-bot-new-coins") - credit for this idea goes to him.
+# Automatic New Cryptocurrency Trading Bot
+This is a major re-write of [binance-trading-bot-new-coins](https://github.com/CyberPunkMetalHead/binance-trading-bot-new-coins "binance-trading-bot-new-coins") - credit for the idea goes to him.
 
 This trading bot detects new coins as soon as they are listed on various exchanges, and automatically places sell and buy orders.  Binance and FTX are currently supported. In addition, it comes with trailing stop loss, stop loss, take profit, and other features.
 
@@ -30,22 +30,26 @@ This is a bit more involved than Discord...
 11. Copy the chat id to `NOTIFICATION_OPTIONS -> TELEGRAM -> AUTH -> CHAT_ID`
 
 
-### Email:
-
-
 ## TODO List:
 - Swap to multi-threading?
-- Notification service (Discord/Telegram)
+- ~~Notification service (Discord/Telegram)~~
 - Additional tests
 - Additional Exchanges*
 
 ## I want to contribute:
 I would love contributors! Please send a pull request, and I will review it.
 
-\*If you plan to add support for additional exchanges, please review and follow the structure used for the FTX and Binance wrapper classes already implemented.
+*If you plan to add support for additional exchanges, please review and follow the structure used for the FTX and Binance wrapper classes already implemented.
 
 ## I found a bug/issue:
 Please include any applicable stack traces and logs.  There are currently two log files: `errors.log` and `verbose_log.log`.  Please also attach any relevant information from these files.
 
 ## Changelog:
-- 2021-09-16: New baseline - I've done a poor job tracking changes thus far.
+- 2021-09-24: 
+  1. `Invalid Symbol` Binance error finally fixed! 
+  2. Notifications for Discord and Telegram added
+- 2021-09-16:
+  1. New baseline - I've done a poor job tracking changes thus far.
+
+## Donate:
+Made a killing using this?  [Buy me a coffee!](https://venmo.com/u/Cdalton713)
