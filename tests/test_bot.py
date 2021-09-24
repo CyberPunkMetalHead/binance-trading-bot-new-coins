@@ -1,11 +1,11 @@
 from unittest import TestCase
 from bot import Bot
-from util.types import Order, Ticker
+from util.types import Order, Ticker, Notification, NotificationAuth
 from util import Util
 from util import Config
 import logging
-import requests
-import binance.exceptions
+from notification import NotificationService
+from time import sleep
 
 # setup logging
 Util.setup_logging(name="new-coin-bot", level="DEBUG")
@@ -15,14 +15,21 @@ logger = logging.getLogger(__name__)
 
 class TestBot(TestCase):
     def setUp(self) -> None:
+        # Config.load_global_config()
         self.FTX = Bot("FTX")
         self.Binance = Bot("BINANCE")
         self.maxDiff = None
         Config.TEST = True
+
         self.FTX.config.STOP_LOSS_PERCENT = 3
         self.FTX.config.TAKE_PROFIT_PERCENT = 3
         self.FTX.config.TRAILING_STOP_LOSS_PERCENT = 2
         self.FTX.config.TRAILING_STOP_LOSS_PERCENT = 2
+
+        self.Binance.config.STOP_LOSS_PERCENT = 3
+        self.Binance.config.TAKE_PROFIT_PERCENT = 3
+        self.Binance.config.TRAILING_STOP_LOSS_PERCENT = 2
+        self.Binance.config.TRAILING_STOP_LOSS_PERCENT = 2
 
     def test_get_new_tickers(self):
         expected = len(self.FTX.ticker_seen_dict)
@@ -155,12 +162,58 @@ class TestBot(TestCase):
             expected["BTC/USDT"].sold_datetime = self.FTX.sold["BTC/USDT"].sold_datetime
             self.assertDictEqual(expected, self.FTX.sold)
 
-    def test_retry_get_tickers(self):
-        self.FTX.ticker_seen_dict = {"BTC/USDT": True}
-        try:
-            actual = self.FTX.get_new_tickers(test_retry=True)
-        except requests.exceptions.ConnectionError:
-            self.assertEqual(True, True)
+    def test_notifications(self):
+
+        NotificationService.DEFAULT_SETTINGS = {
+            "SEND_MESSAGE": True,
+            "SEND_ERROR": True,
+            "SEND_VERBOSE": True,
+            "SEND_WARNING": True,
+            "SEND_INFO": True,
+            "SEND_DEBUG": True,
+            "SEND_ENTRY": True,
+            "SEND_CLOSE": True,
+        }
+        Config.load_global_config()
+
+        Config.NOTIFICATION_SERVICE.send_message("send_message test")
+        sleep(0.1)
+        Config.NOTIFICATION_SERVICE.send_error("send_error test")
+        sleep(0.1)
+        Config.NOTIFICATION_SERVICE.send_verbose("send_verbose test")
+        sleep(0.1)
+        Config.NOTIFICATION_SERVICE.send_warning("send_warning test")
+        sleep(0.1)
+        Config.NOTIFICATION_SERVICE.send_info("send_info test")
+        sleep(0.1)
+        Config.NOTIFICATION_SERVICE.send_debug("send_debug test")
+        sleep(0.1)
+
+        tickers, ticker_dict = self.FTX.get_starting_tickers()
+        self.FTX.all_tickers = [t for t in tickers if t.ticker != "BTC/USDT"]
+        ticker_dict.pop("BTC/USDT")
+        self.FTX.ticker_seen_dict = ticker_dict
+        new_tickers = self.FTX.get_new_tickers()
+
+        for new_ticker in new_tickers:
+            self.FTX.process_new_ticker(new_ticker)
+
+        Config.NOTIFICATION_SERVICE.send_entry(self.FTX.orders["BTC/USDT"])
+        sleep(0.1)
+        Config.NOTIFICATION_SERVICE.send_close(self.FTX.orders["BTC/USDT"])
+        sleep(0.1)
+        Config.NOTIFICATION_SERVICE.send_entry(
+            self.FTX.orders["BTC/USDT"], custom=True, comment="Custom Entry Comment"
+        )
+
+    def test_github_failed(self):
+        Config.load_global_config()
+        new_tickers = [Ticker(ticker='YGGUSDT', base_ticker='YGG', quote_ticker='USDT'), Ticker(ticker='SYSUSDT', base_ticker='SYS', quote_ticker='USDT')]
+        for new_ticker in new_tickers:
+            self.Binance.process_new_ticker(new_ticker)
+
+
+
     # LEAVE OFF, PLEASE DON'T SPAM MY ACCOUNT :)
 
     # def test_pipedream(self):

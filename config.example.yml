@@ -45,3 +45,31 @@ PROGRAM_OPTIONS:
   #  if true, any time a new LIVE order or sale occurs the resulting object will be sent to and logged to pipedream.com account.
   #  I'll use this info to build better test cases and it will help me catch edge cases and bugs.
   SHARE_DATA: True
+NOTIFICATION_OPTIONS:
+  DISCORD:
+    ENABLED: True
+    SETTINGS:
+      SEND_MESSAGE: True,
+      SEND_ERROR: True,
+      SEND_VERBOSE: False,
+      SEND_WARNING: False,
+      SEND_INFO: False,
+      SEND_DEBUG: False,
+      SEND_ENTRY: True,
+      SEND_CLOSE: True,
+    AUTH:
+      ENDPOINT: 'https://discord.com/api/webhooks/<...> -> Read readme for more info'
+  TELEGRAM:
+    ENABLED: True
+    SETTINGS:
+      SEND_MESSAGE: True,
+      SEND_ERROR: True,
+      SEND_VERBOSE: False,
+      SEND_WARNING: False,
+      SEND_INFO: False,
+      SEND_DEBUG: False,
+      SEND_ENTRY: True,
+      SEND_CLOSE: True,
+    AUTH:
+      ENDPOINT: 'TOKEN -> Read readme for more info'
+      CHAT_ID: '-XXXXXX -> Read readme for more info'

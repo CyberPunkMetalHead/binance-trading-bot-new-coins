@@ -6,6 +6,32 @@ BROKERS = ["BINANCE", "FTX"]
 
 BrokerType = Union["FTX", "BINANCE"]
 ActionType = Union["Buy", "Sell"]
+NotificationType = Union["COMMAND_LINE", "DISCORD", "TELEGRAM", "EMAIL"]
+
+
+class NotificationSettings(BaseModel):
+    send_message: Optional[bool] = True
+
+    send_error: Optional[bool] = True
+    send_verbose: Optional[bool] = False
+    send_warning: Optional[bool] = False
+    send_info: Optional[bool] = False
+    send_debug: Optional[bool] = False
+
+    send_entry: Optional[bool] = True
+    send_close: Optional[bool] = True
+
+
+class NotificationAuth(BaseModel):
+    endpoint: Optional[str] = None
+    chat_id: Optional[int] = None
+
+
+class Notification(BaseModel):
+    service: str
+    enabled: bool
+    settings: Optional[NotificationSettings] = None
+    auth: Optional[NotificationAuth] = None
 
 
 class Ticker(BaseModel):
@@ -15,6 +41,7 @@ class Ticker(BaseModel):
 
 
 class Order(BaseModel):
+    broker: str
     ticker: Ticker
     purchase_datetime: datetime
     price: float
