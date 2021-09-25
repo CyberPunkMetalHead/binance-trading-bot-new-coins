@@ -81,11 +81,11 @@ def make_threads_to_request_all_coins(queue, interval=0.1, max_amount_of_threads
         time.sleep(interval)
         # checks if the amount of threads is bigger than max_amount_of_threads
         if len(threading.enumerate()) > max_amount_of_threads:
-            #print("Too many threads, waiting 1 second to attempt to create a new thread.")
+            print("Too many threads, waiting 1 second to attempt to create a new thread.")
             time.sleep(1)
         # checks if the queue isn't getting too big
         elif len(queue) > max_queue_length:
-            #print("Queue length too big, waiting 1 second to attempt to create a new thread.")
+            print("Queue length too big, waiting 1 second to attempt to create a new thread.")
             time.sleep(1)
         else:
             threading.Thread(target=add_updated_all_coins_to_queue, args=(queue,)).start()
