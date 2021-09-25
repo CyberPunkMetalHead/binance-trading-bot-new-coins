@@ -1,10 +1,12 @@
 from trade_client import *
 from store_order import *
 from load_config import *
+from new_listings_scraper import *
 
 from collections import defaultdict
 from datetime import datetime, time
 import time
+import threading
 
 import json
 import os.path
@@ -33,13 +35,12 @@ def generate_coin_seen_dict(all_coins):
     return coin_seen_dict
 
 
-def get_new_coins(coin_seen_dict):
+def get_new_coins(coin_seen_dict, all_coins_recheck):
     """
     This method checks if there are new coins listed and returns them in a list.
     The value of the new coins in coin_seen_dict will be set to True to make them not get detected again.
     """
     result = []
-    all_coins_recheck = get_all_coins()
 
     for new_coin in all_coins_recheck:
         if not coin_seen_dict[new_coin['symbol']]:
@@ -55,6 +56,39 @@ def get_price(coin, pairing):
     Get the latest price for a coin
     """
     return client.get_ticker(symbol=coin+pairing)['lastPrice']
+
+
+def add_updated_all_coins_to_queue(queue):
+    """
+    This method makes a request to get all coins and adds it to the given queue.
+    """
+    all_coins_updated = get_all_coins()
+    queue += [all_coins_updated]
+
+
+def make_threads_to_request_all_coins(queue, interval=0.1, max_amount_of_threads=20, max_queue_length=20):
+    """
+    This method creates threads for new requests to get all coins.
+    A new thread is created every interval.
+    If there are more threads than max_amount_of_threads no new threads will be created, after every 1 second there
+    will be a new attempt to create a thread.
+    The amount of threads can increase if the response from Binance to get all coins increases.
+    If the queue length gets bigger than max_queue_length no new threads will be created, after every 1 second there
+    will be a new attempt to create a thread.
+    The amount of elements in the queue can increase if the while loop in main takes long to handle.
+    """
+    while True:
+        time.sleep(interval)
+        # checks if the amount of threads is bigger than max_amount_of_threads
+        if len(threading.enumerate()) > max_amount_of_threads:
+            #print("Too many threads, waiting 1 second to attempt to create a new thread.")
+            time.sleep(1)
+        # checks if the queue isn't getting too big
+        elif len(queue) > max_queue_length:
+            #print("Queue length too big, waiting 1 second to attempt to create a new thread.")
+            time.sleep(1)
+        else:
+            threading.Thread(target=add_updated_all_coins_to_queue, args=(queue,)).start()
 
 
 def main():
@@ -75,6 +109,14 @@ def main():
 
     all_coins = get_all_coins()
     coin_seen_dict = generate_coin_seen_dict(all_coins)
+
+    # this list will work as a queue, if a new updated all_coins is received it will be added to this queue
+    queue_of_updated_all_coins = []
+    # start a thread to run the make_threads_to_request_all_coins method
+    threading.Thread(target=make_threads_to_request_all_coins, args=(queue_of_updated_all_coins,)).start()
+    # this is just used to calculate the amount of time between getting updated all_coins
+    t0 = time.time()
+    threading.Thread(target=search_and_update, args=()).start()
 
     while True:
         try:
@@ -97,14 +139,14 @@ def main():
                     last_price = get_price(symbol, pairing)
 
                     # update stop loss and take profit values if threshold is reached
-                    if float(last_price) > stored_price + (stored_price*coin_tp /100) and enable_tsl:
+                    if float(last_price) < stored_price - (stored_price*coin_tp /100) and enable_tsl:
                         # increase as absolute value for TP
-                        new_tp = float(last_price) + (float(last_price)*ttp /100)
+                        new_tp = float(last_price) - (float(last_price)*ttp /100)
                         # convert back into % difference from when the coin was bought
                         new_tp = float( (new_tp - stored_price) / stored_price*100)
 
                         # same deal as above, only applied to trailing SL
-                        new_sl = float(last_price) - (float(last_price)*tsl /100)
+                        new_sl = float(last_price) + (float(last_price)*tsl /100)
                         new_sl = float((new_sl - stored_price) / stored_price*100)
 
                         # new values to be added to the json file
@@ -115,13 +157,13 @@ def main():
                         print(f'updated tp: {round(new_tp, 3)} and sl: {round(new_sl, 3)}')
 
                     # close trade if tsl is reached or trail option is not enabled
-                    elif float(last_price) < stored_price - (stored_price*sl /100) or float(last_price) > stored_price + (stored_price*tp /100) and not enable_tsl:
+                    elif float(last_price) > stored_price + (stored_price*sl /100) or float(last_price) < stored_price - (stored_price*coin_tp /100) and not enable_tsl:
 
                         try:
 
                             # sell for real if test mode is set to false
                             if not test_mode:
-                                sell = create_order(coin, coin['volume'], 'SELL')
+                                sell = create_order(coin, coin['volume'], 'BUY')
 
 
                             print(f"sold {coin} at {(float(last_price) - stored_price) / float(stored_price)*100}")
@@ -159,8 +201,20 @@ def main():
             else:
                 order = {}
 
-            # check if new coins are listed
-            new_coins = get_new_coins(coin_seen_dict)
+            # check if a new all_coins_updated is on the queue
+            if len(queue_of_updated_all_coins) > 0:
+                # get the first updated coins from the queue
+                all_coins_updated = queue_of_updated_all_coins.pop(0)
+                # check if new coins are listed
+                new_coins = get_new_coins(coin_seen_dict, all_coins_updated)
+
+                #print("time to get updated list of coins: ", time.time() - t0)
+                #print("current amount of threads: ", len(threading.enumerate()))
+                #print("current queue length: ", len(queue_of_updated_all_coins))
+                t0 = time.time()
+            else:
+                # if no new all_coins_updated is on the queue, new_coins should be empty
+                new_coins = []
 
             # the buy block and logic pass
             if len(new_coins) > 0:
@@ -193,7 +247,7 @@ def main():
 
                             # place a live order if False
                             else:
-                                order[coin['symbol']] = create_order(symbol_only+pairing, volume, 'BUY')
+                                order[coin['symbol']] = create_order(symbol_only+pairing, volume, 'SE')
                                 order[coin['symbol']]['tp'] = tp
                                 order[coin['symbol']]['sl'] = sl
 
