@@ -9,5 +9,4 @@ sold.json
 __pycache__/
 
 # Ignore config
-config
 config.yml
