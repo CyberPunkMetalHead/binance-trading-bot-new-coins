@@ -247,7 +247,7 @@ def main():
 
                             # place a live order if False
                             else:
-                                order[coin['symbol']] = create_order(symbol_only+pairing, volume, 'SE')
+                                order[coin['symbol']] = create_order(symbol_only+pairing, volume, 'SELL')
                                 order[coin['symbol']]['tp'] = tp
                                 order[coin['symbol']]['sl'] = sl
 
