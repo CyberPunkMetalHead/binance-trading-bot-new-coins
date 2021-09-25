@@ -7,3 +7,7 @@ sold.json
 
 # Ignore pycache
 __pycache__/
+
+# Ignore config
+config
+config.yml

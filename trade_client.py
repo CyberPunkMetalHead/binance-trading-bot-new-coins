@@ -1,4 +1,5 @@
 from auth.binance_auth import *
+from binance.enums import *
 
 client = load_binance_creds('auth/auth.yml')
 
@@ -44,7 +45,7 @@ def create_order(coin, amount, action):
     """
     Creates simple buy order and returns the order
     """
-    return client.create_order(
+    return client.create_margin_order(
         symbol = coin,
         side = action,
         type = 'MARKET',

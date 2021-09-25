@@ -9,10 +9,10 @@
     RUN_EVERY: 0.025
     TEST: True
     SL: 3
-    TP: 3
+    TP: 2
     ENABLE_TSL: True
     TSL: 4
     TTP: 2
   SEND_NOTIFICATIONS: True
-  EMAIL_ADDRESS: uberandrew99@gmail.com
-  EMAIL_PASSWORD: X68bvbmc0p
+  EMAIL_ADDRESS: 'your@email.address'
+  EMAIL_PASSWORD: 'I'll let you figure out what this one is'
