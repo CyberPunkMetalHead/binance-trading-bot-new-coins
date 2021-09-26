@@ -126,81 +126,11 @@ def main():
             if os.path.isfile('order.json'):
                 order = load_order('order.json')
 
-                for coin in list(order):
-
-                    # store some necesarry trade info for a sell
-                    stored_price = float(order[coin]['price'])
-                    coin_tp = order[coin]['tp']
-                    coin_sl = order[coin]['sl']
-                    volume = order[coin]['volume']
-                    symbol = coin.split(pairing)[0]
-
-
-                    last_price = get_price(symbol, pairing)
-
-                    # update stop loss and take profit values if threshold is reached
-                    if float(last_price) < stored_price - (stored_price*coin_tp /100) and enable_tsl:
-                        # increase as absolute value for TP
-                        new_tp = float(last_price) - (float(last_price)*ttp /100)
-                        # convert back into % difference from when the coin was bought
-                        new_tp = float( (new_tp - stored_price) / stored_price*100)
-
-                        # same deal as above, only applied to trailing SL
-                        new_sl = float(last_price) + (float(last_price)*tsl /100)
-                        new_sl = float((new_sl - stored_price) / stored_price*100)
-
-                        # new values to be added to the json file
-                        order[coin]['tp'] = new_tp
-                        order[coin]['sl'] = new_sl
-                        store_order('order.json', order)
-
-                        print(f'updated tp: {round(new_tp, 3)} and sl: {round(new_sl, 3)}')
-
-                    # close trade if tsl is reached or trail option is not enabled
-                    elif float(last_price) > stored_price + (stored_price*sl /100) or float(last_price) < stored_price - (stored_price*coin_tp /100) and not enable_tsl:
-
-                        try:
-
-                            # sell for real if test mode is set to false
-                            if not test_mode:
-                                sell = create_order(coin, coin['volume'], 'BUY')
-
-
-                            print(f"sold {coin} at {(float(last_price) - stored_price) / float(stored_price)*100}")
-
-                            # remove order from json file
-                            order.pop(coin)
-                            store_order('order.json', order)
-
-                        except Exception as e:
-                            print(e)
-
-                        # store sold trades data
-                        else:
-                            if os.path.isfile('sold.json'):
-                                sold_coins = load_order('sold.json')
-
-                            else:
-                                sold_coins = {}
-
-                            if not test_mode:
-                                sold_coins[coin] = sell
-                                store_order('sold.json', sold_coins)
-                            else:
-                                sold_coins[coin] = {
-                                            'symbol':coin,
-                                            'price':last_price,
-                                            'volume':volume,
-                                            'time':datetime.timestamp(datetime.now()),
-                                            'profit': float(last_price) - stored_price,
-                                            'relative_profit': round((float(last_price) - stored_price) / stored_price*100, 3)
-                                            }
-
-                                store_order('sold.json', sold_coins)
-
             else:
                 order = {}
 
+            #Removed sell block due to scope change.
+                
             # check if a new all_coins_updated is on the queue
             if len(queue_of_updated_all_coins) > 0:
                 # get the first updated coins from the queue
