@@ -1,18 +1,28 @@
 ---
   TRADE_OPTIONS:
-    # In your pairing coin
+    # the amount in units for each trade in PAIRING
+    # examples 15 = 15 units of SHIBA
     QUANTITY: 15
-    # BTCUSDT will be bought for example
+    # the quoted currency of choice, e.g. BTCUSDT
+    # make sure to use the quote currency, e.g.
+    # when trading BTC/USDT use USDT
     PAIRING: USDT
     # How often to check for posts and run the script
     # in minutes
     RUN_EVERY: 0.025
+    # Enable/disable test mode. Setting this to False
+    # will use live funds to be particularly careful here 
+    # and only enable at your own risk.
     TEST: True
+    # Your initial stop loss in % of your account principal.
     SL: 3
+    # Your initial profit in % of your account principal.
     TP: 2
+    # enable trailing stop loss and profit functions
     ENABLE_TSL: True
+    # The trailing stop value in % of the underlying price.
+    # 4 = 4%
     TSL: 4
+    # The trailing profit value in % of the underlying price.
+    # 2 = 2%
     TTP: 2
-  SEND_NOTIFICATIONS: True
-  EMAIL_ADDRESS: 'your@email.address'
-  EMAIL_PASSWORD: 'I'll let you figure out what this one is'
