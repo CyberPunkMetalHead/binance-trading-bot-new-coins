@@ -1,18 +1,25 @@
 ---
   TRADE_OPTIONS:
-    # In your pairing coin
+    # the amount in % for each trade in PAIRING
     QUANTITY: 15
-    # BTCUSDT will be bought for example
+    # the quoted currency of choice, e.g. BTCUSDT
+    # make sure to use the quote currency, e.g.
+    # when trading BTC/USDT use USDT
     PAIRING: USDT
     # How often to check for posts and run the script
     # in minutes
     RUN_EVERY: 0.025
+    # Enable/disable test mode. Setting this to False
+    # will use live funds to be particularly careful here 
+    # and only enable at your own risk.
     TEST: True
+    # Your initial stop loss in R multiples (3 = 300%).
     SL: 3
+    # Your initial profit in R multiples (2 = 200%).
     TP: 2
+    # enable trailing stop loss and profit functions
     ENABLE_TSL: True
+    # The trailing stop value in % of your account principal.
     TSL: 4
+    # The trailing profit value in % of your account principal.
     TTP: 2
-  SEND_NOTIFICATIONS: True
-  EMAIL_ADDRESS: 'your@email.address'
-  EMAIL_PASSWORD: 'I'll let you figure out what this one is'
